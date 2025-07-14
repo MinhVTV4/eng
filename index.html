@@ -19,7 +19,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #passageText { max-height: 200px; overflow-y: auto; }
         .topic-container { transition: all 0.3s ease-in-out; }
-        /* NÂNG CẤP: CSS cho cửa sổ dịch thuật (Modal) */
         #translationModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
@@ -114,7 +113,6 @@
             <div id="questionContainer" class="mb-6">
                 <p class="text-xl md:text-2xl font-semibold leading-relaxed mb-6">
                     <span id="questionText"></span>
-                    <!-- NÂNG CẤP: Nút dịch câu hỏi -->
                     <span id="translateQuestionBtn" class="translate-icon" title="Dịch câu hỏi này">🌐</span>
                 </p>
                 <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -137,7 +135,7 @@
         </div>
     </div>
     
-    <!-- NÂNG CẤP: Modal hiển thị bản dịch -->
+    <!-- Modal hiển thị bản dịch -->
     <div id="translationModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="text-xl font-bold text-slate-800 mb-4">Bản dịch</h3>
@@ -169,7 +167,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+            model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
@@ -232,7 +230,6 @@
             catch (error) { console.error("JSON Parse Error:", error, "String:", jsonString); return null; }
         }
 
-        // NÂNG CẤP: Hàm dịch thuật chung
         async function getTranslation(text) {
             try {
                 const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
@@ -252,19 +249,66 @@
             });
         }
 
-        function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
-        function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
-        function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
+        // SỬA LỖI: Cập nhật các prompt để yêu cầu câu trả lời đầy đủ
+        function getVocabularyPrompt(level, topic, count) {
+            return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}".
+            For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
+            Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE.
+            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects:
+            \`\`\`json
+            [
+              {
+                "question": "...",
+                "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
+                "answer": "Full text of the correct option",
+                "explanation": "..."
+              }
+            ]
+            \`\`\``;
+        }
+        function getReadingPrompt(level, topic, count) {
+            return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner.
+            For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE.
+            For the "answer" field in each question, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
+            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object:
+            \`\`\`json
+            {
+              "passage": "...",
+              "questions": [
+                {
+                  "question": "...",
+                  "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
+                  "answer": "Full text of the correct option",
+                  "explanation": "..."
+                }
+              ]
+            }
+            \`\`\``;
+        }
+        function getGrammarPrompt(level, count) {
+            return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals).
+            For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
+            Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule.
+            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects:
+            \`\`\`json
+            [
+              {
+                "question": "...",
+                "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
+                "answer": "Full text of the correct option",
+                "explanation": "..."
+              }
+            ]
+            \`\`\``;
+        }
 
         async function startQuiz() {
             const quizType = quizTypeSelect.value;
             const topic = quizType !== 'grammar' ? topicSelect.value : 'Grammar';
             const level = levelSelect.value;
-
             quizData = { topic, level, quizType };
             loadingTopic.textContent = `"${topic}"`;
             showView('loading-view');
-
             try {
                 let prompt;
                 if (quizType === 'vocabulary') prompt = getVocabularyPrompt(level, topic, 5);
@@ -317,7 +361,7 @@
                 infoBtn.textContent = 'i';
                 infoBtn.title = `Dịch nghĩa "${option}"`;
                 infoBtn.onclick = (e) => {
-                    e.stopPropagation(); // Ngăn không cho sự kiện click lan ra nút cha
+                    e.stopPropagation();
                     showTranslationModal(getTranslation(option));
                 };
 
@@ -331,6 +375,7 @@
         function handleAnswer(selectedOption) {
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const currentQuestion = questions[currentQuestionIndex];
+            // Logic so sánh giờ đã chính xác vì cả hai đều là chuỗi đầy đủ
             const isCorrect = selectedOption === currentQuestion.answer;
             Array.from(optionsContainer.children).forEach(button => {
                 button.disabled = true; button.classList.add('opacity-70');
@@ -428,7 +473,6 @@
         viewHistoryFromResultButton.addEventListener('click', showHistory);
         nextQuestionButton.addEventListener('click', moveToNextQuestion);
         quizTypeSelect.addEventListener('change', handleQuizTypeChange);
-        // NÂNG CẤP: Gán sự kiện cho các nút dịch thuật
         translateQuestionBtn.addEventListener('click', () => showTranslationModal(getTranslation(questionText.textContent)));
         closeTranslationModal.addEventListener('click', () => translationModal.classList.add('hidden'));
         translationModal.addEventListener('click', (e) => { if (e.target === translationModal) { translationModal.classList.add('hidden'); } });
