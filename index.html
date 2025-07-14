@@ -17,13 +17,19 @@
         .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0ea5e9; animation: spin 1s ease-in-out infinite; }
         .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #passageText { max-height: 200px; overflow-y: auto; }
+        #passageText, #transcriptContainer { max-height: 200px; overflow-y: auto; }
         .topic-container { transition: all 0.3s ease-in-out; }
         #translationModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .translate-icon { cursor: pointer; color: #3b82f6; margin-left: 8px; font-size: 1.25rem; display: inline-block; vertical-align: middle; }
         .info-icon { cursor: pointer; background-color: #dbeafe; color: #3b82f6; border-radius: 50%; width: 22px; height: 22px; font-style: normal; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-left: auto; }
+        .highlight-word {
+            background-color: #facc15; /* yellow-400 */
+            color: #1f2937; /* gray-800 */
+            padding: 2px 0;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -116,13 +122,17 @@
         <div id="quiz-view" class="view">
             <div class="flex justify-between items-center mb-4"><div id="progress" class="text-lg font-semibold text-slate-600">Câu 1 / 5</div><div id="score" class="text-lg font-bold text-sky-600">Điểm: 0</div></div>
             <div class="w-full bg-slate-200 rounded-full h-2.5 mb-8"><div id="progressBar" class="bg-sky-500 h-2.5 rounded-full" style="width: 20%"></div></div>
-            <div id="audioPlayerContainer" class="hidden mb-6 p-4 bg-slate-800 text-white rounded-lg flex items-center justify-center space-x-4">
+            <div id="audioPlayerContainer" class="hidden mb-2 p-4 bg-slate-800 text-white rounded-lg flex items-center justify-center space-x-4">
                 <button id="playAudioBtn" class="p-3 bg-sky-500 rounded-full hover:bg-sky-600 disabled:bg-slate-500 disabled:cursor-not-allowed">
                     <svg id="playIcon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
                     <svg id="pauseIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
                 </button>
                 <div id="audioStatus" class="text-sm">Nhấn để nghe</div>
             </div>
+            <div id="transcriptControls" class="hidden mb-4 text-center">
+                <button id="showTranscriptBtn" class="text-sm text-sky-600 hover:underline">Hiện lời thoại</button>
+            </div>
+            <div id="transcriptContainer" class="hidden mb-6 p-3 bg-slate-100 rounded-lg text-slate-700 text-lg leading-relaxed"></div>
             <div id="passageContainer" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 hidden"><p id="passageText"></p></div>
             <div id="questionContainer" class="mb-6"><p class="text-xl md:text-2xl font-semibold leading-relaxed mb-6"><span id="questionText"></span><span id="translateQuestionBtn" class="translate-icon" title="Dịch câu hỏi này">🌐</span></p><div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
             <div id="feedbackContainer" class="mt-6 p-4 rounded-lg min-h-[100px]"></div>
@@ -178,7 +188,7 @@
             model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
 
         let quizData = {};
         let currentQuestionIndex = 0;
@@ -219,7 +229,8 @@
         });
 
         const handleAuthAction = async (action) => {
-            const email = emailInput.value, password = passwordInput.value; 
+            const email = emailInput.value;
+            const password = passwordInput.value; 
             authError.textContent = '';
             if (!email || !password) { 
                 authError.textContent = 'Vui lòng nhập đủ email và mật khẩu.'; 
@@ -259,6 +270,7 @@
 
         const handleLogout = async () => { 
             try { 
+                if (synth.speaking) { synth.cancel(); }
                 await signOut(auth); 
             } catch (error) { 
                 showError("Đăng xuất thất bại."); 
@@ -343,6 +355,8 @@
             passageContainer.classList.toggle('hidden', !isReading);
             if (isReading) passageText.textContent = quizData.raw.passage;
             audioPlayerContainer.classList.toggle('hidden', !isListening);
+            transcriptControls.classList.toggle('hidden', !isListening);
+            transcriptContainer.classList.add('hidden'); 
             if (isListening) setupAudioPlayer();
             renderQuestion();
         }
@@ -354,7 +368,22 @@
             const voices = synth.getVoices();
             utterance.voice = voices.find(voice => voice.lang.startsWith('en-')) || voices[0];
             utterance.rate = 0.9;
-            utterance.onboundary = (event) => { lastSpokenCharIndex = startIndex + event.charIndex; };
+            const words = text.split(/(\s+)/);
+            const wordElements = words.map(word => { const span = document.createElement('span'); span.textContent = word; return span; });
+            transcriptContainer.innerHTML = '';
+            wordElements.forEach(el => transcriptContainer.appendChild(el));
+            let charCounter = 0;
+            const wordBoundaries = words.map(word => { const start = charCounter; charCounter += word.length; return { word, start, end: charCounter }; });
+            utterance.onboundary = (event) => {
+                lastSpokenCharIndex = startIndex + event.charIndex;
+                wordElements.forEach(el => el.classList.remove('highlight-word'));
+                for(let i = 0; i < wordBoundaries.length; i++) {
+                    if (lastSpokenCharIndex >= wordBoundaries[i].start && lastSpokenCharIndex < wordBoundaries[i].end) {
+                        wordElements[i].classList.add('highlight-word');
+                        break;
+                    }
+                }
+            };
             utterance.onstart = () => { audioState = 'playing'; playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; };
             utterance.onend = () => {
                 if (!isPausedByUser) {
@@ -364,6 +393,7 @@
                     pauseIcon.classList.add('hidden');
                     audioStatus.textContent = "Nghe lại";
                     Array.from(optionsContainer.children).forEach(button => { button.disabled = false; button.classList.remove('opacity-50', 'cursor-not-allowed'); });
+                    wordElements.forEach(el => el.classList.remove('highlight-word'));
                 }
             };
             utterance.onerror = (e) => { audioState = 'idle'; audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
@@ -599,6 +629,11 @@
             } else { 
                 playSpeech(quizData.raw.script, lastSpokenCharIndex);
             }
+        });
+        
+        showTranscriptBtn.addEventListener('click', () => {
+            const isHidden = transcriptContainer.classList.toggle('hidden');
+            showTranscriptBtn.textContent = isHidden ? 'Hiện lời thoại' : 'Ẩn lời thoại';
         });
     </script>
 </body>
