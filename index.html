@@ -18,6 +18,13 @@
         .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #passageText { max-height: 200px; overflow-y: auto; }
+        .topic-container { transition: all 0.3s ease-in-out; }
+        /* NÂNG CẤP: CSS cho cửa sổ dịch thuật (Modal) */
+        #translationModal.hidden { display: none; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
+        .translate-icon { cursor: pointer; color: #3b82f6; margin-left: 8px; font-size: 1.25rem; display: inline-block; vertical-align: middle; }
+        .info-icon { cursor: pointer; background-color: #dbeafe; color: #3b82f6; border-radius: 50%; width: 22px; height: 22px; font-style: normal; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-left: auto; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -43,10 +50,18 @@
         <div id="setup-view" class="view">
             <div class="flex justify-between items-start mb-8">
                  <div><h1 class="text-3xl font-bold text-sky-600">AI English Quiz</h1><p id="welcomeMessage" class="text-slate-500">Chào mừng trở lại!</p></div>
-                 <div class="flex flex-col items-end space-y-2"><button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Đăng xuất</button><button id="showHistoryButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Lịch sử</button></div>
+                 <div class="flex flex-col items-end space-y-2">
+                    <div id="streakDisplay" class="flex items-center justify-center bg-orange-100 text-orange-600 font-bold text-sm px-3 py-1 rounded-full">
+                        <span class="mr-1">🔥</span>
+                        <span id="streakCount">0</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="showHistoryButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Lịch sử</button>
+                        <button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Đăng xuất</button>
+                    </div>
+                 </div>
             </div>
             <div class="space-y-6">
-                <!-- NÂNG CẤP: Thêm lựa chọn Ngữ pháp -->
                 <div>
                     <label for="quizTypeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn kỹ năng luyện tập:</label>
                     <select id="quizTypeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
@@ -55,7 +70,26 @@
                         <option value="grammar">Ngữ pháp (Grammar)</option>
                     </select>
                 </div>
-                <div><label for="topicInput" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label><input type="text" id="topicInput" value="Daily Life" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"><p class="text-sm text-slate-400 mt-1">Chủ đề áp dụng cho Từ vựng & Đọc hiểu.</p></div>
+                <div id="topicContainer" class="topic-container">
+                    <label for="topicSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label>
+                    <select id="topicSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                        <option value="Travel">Du lịch (Travel)</option>
+                        <option value="Technology" selected>Công nghệ (Technology)</option>
+                        <option value="Food & Cooking">Ẩm thực & Nấu ăn (Food & Cooking)</option>
+                        <option value="Health & Fitness">Sức khỏe & Thể hình (Health & Fitness)</option>
+                        <option value="Work & Business">Công việc & Kinh doanh (Work & Business)</option>
+                        <option value="Movies & Entertainment">Phim ảnh & Giải trí (Movies & Entertainment)</option>
+                        <option value="Music">Âm nhạc (Music)</option>
+                        <option value="Sports">Thể thao (Sports)</option>
+                        <option value="Education">Giáo dục (Education)</option>
+                        <option value="Nature & Environment">Thiên nhiên & Môi trường (Nature & Environment)</option>
+                        <option value="History">Lịch sử (History)</option>
+                        <option value="Science">Khoa học (Science)</option>
+                        <option value="Fashion & Shopping">Thời trang & Mua sắm (Fashion & Shopping)</option>
+                        <option value="Daily Life">Cuộc sống hàng ngày (Daily Life)</option>
+                        <option value="Relationships">Các mối quan hệ (Relationships)</option>
+                    </select>
+                </div>
                 <div><label for="levelSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn trình độ của bạn:</label><select id="levelSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"><option value="A2">A2 (Beginner)</option><option value="B1" selected>B1 (Intermediate)</option><option value="B2">B2 (Upper-Intermediate)</option><option value="C1">C1 (Advanced)</option></select></div>
             </div>
             <button id="startQuizButton" class="mt-10 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>Bắt đầu làm bài</button>
@@ -77,7 +111,14 @@
             <div class="flex justify-between items-center mb-4"><div id="progress" class="text-lg font-semibold text-slate-600">Câu 1 / 5</div><div id="score" class="text-lg font-bold text-sky-600">Điểm: 0</div></div>
             <div class="w-full bg-slate-200 rounded-full h-2.5 mb-8"><div id="progressBar" class="bg-sky-500 h-2.5 rounded-full" style="width: 20%"></div></div>
             <div id="passageContainer" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 hidden"><p id="passageText"></p></div>
-            <div id="questionContainer" class="mb-6"><p id="questionText" class="text-xl md:text-2xl font-semibold leading-relaxed mb-6"></p><div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+            <div id="questionContainer" class="mb-6">
+                <p class="text-xl md:text-2xl font-semibold leading-relaxed mb-6">
+                    <span id="questionText"></span>
+                    <!-- NÂNG CẤP: Nút dịch câu hỏi -->
+                    <span id="translateQuestionBtn" class="translate-icon" title="Dịch câu hỏi này">🌐</span>
+                </p>
+                <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
             <div id="feedbackContainer" class="mt-6 p-4 rounded-lg min-h-[100px]"></div>
             <button id="nextQuestionButton" class="hidden mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition">Tiếp tục</button>
         </div>
@@ -94,14 +135,24 @@
         <div id="error-view" class="view text-center text-red-600 bg-red-100 p-6 rounded-lg">
              <h2 class="text-2xl font-bold mb-4">Đã xảy ra lỗi</h2><p id="errorMessage" class="mb-6"></p><button id="backToSetupButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">Quay lại</button>
         </div>
-
+    </div>
+    
+    <!-- NÂNG CẤP: Modal hiển thị bản dịch -->
+    <div id="translationModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">Bản dịch</h3>
+            <div id="translationResult" class="bg-slate-100 p-4 rounded-lg min-h-[80px]">
+                <div class="spinner mx-auto"></div>
+            </div>
+            <button id="closeTranslationModal" class="mt-6 w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg">Đóng</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
         import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
@@ -118,17 +169,33 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+            model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicInput = document.getElementById('topicInput'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton');
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
 
         let quizData = {};
         let currentQuestionIndex = 0;
         let score = 0;
 
+        async function updateUserStreak(userId) {
+            const userRef = doc(db, "users", userId);
+            const today = new Date().toISOString().slice(0, 10);
+            try {
+                const userDoc = await getDoc(userRef);
+                let currentStreak = 0; let lastActivityDate = '';
+                if (userDoc.exists()) { const userData = userDoc.data(); currentStreak = userData.currentStreak || 0; lastActivityDate = userData.lastActivityDate || ''; }
+                if (lastActivityDate === today) { streakCount.textContent = currentStreak; return; }
+                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().slice(0, 10);
+                if (lastActivityDate === yesterdayStr) { currentStreak++; } else { currentStreak = 1; }
+                await setDoc(userRef, { lastActivityDate: today, currentStreak: currentStreak }, { merge: true });
+                streakCount.textContent = currentStreak;
+            } catch (error) { console.error("Error updating streak:", error); }
+        }
+
         onAuthStateChanged(auth, user => {
-            if (user) { welcomeMessage.textContent = `Chào mừng, ${user.email}!`; showView('setup-view'); } 
+            if (user) { welcomeMessage.textContent = `Chào mừng, ${user.email}!`; updateUserStreak(user.uid); showView('setup-view'); } 
             else { showView('auth-view'); }
         });
         const handleAuthAction = async (action) => {
@@ -139,8 +206,11 @@
             buttonText.textContent = action === 'login' ? 'Đang đăng nhập...' : 'Đang đăng ký...';
             spinner.classList.remove('hidden'); button.disabled = true; otherButton.disabled = true;
             try {
-                if (action === 'login') await signInWithEmailAndPassword(auth, email, password);
-                else await createUserWithEmailAndPassword(auth, email, password);
+                if (action === 'login') { await signInWithEmailAndPassword(auth, email, password); } 
+                else {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", userCredential.user.uid), { email: userCredential.user.email, createdAt: serverTimestamp(), currentStreak: 0, lastActivityDate: '' });
+                }
             } catch (error) { authError.textContent = getFriendlyAuthError(error.code); } 
             finally {
                 buttonText.textContent = action === 'login' ? 'Đăng nhập' : 'Đăng ký';
@@ -162,24 +232,34 @@
             catch (error) { console.error("JSON Parse Error:", error, "String:", jsonString); return null; }
         }
 
-        function getVocabularyPrompt(level, topic, count) {
-            return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``;
+        // NÂNG CẤP: Hàm dịch thuật chung
+        async function getTranslation(text) {
+            try {
+                const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
+                const result = await model.generateContent(prompt);
+                return result.response.text();
+            } catch (error) {
+                console.error("Translation error:", error);
+                return "Không thể dịch được.";
+            }
         }
 
-        function getReadingPrompt(level, topic, count) {
-            return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ] }\n\`\`\``;
+        function showTranslationModal(textPromise) {
+            translationModal.classList.remove('hidden');
+            translationResult.innerHTML = '<div class="spinner mx-auto"></div>';
+            textPromise.then(translatedText => {
+                translationResult.innerHTML = `<p class="text-lg">${translatedText}</p>`;
+            });
         }
 
-        // NÂNG CẤP: Thêm prompt cho bài tập Ngữ pháp
-        function getGrammarPrompt(level, count) {
-            return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``;
-        }
+        function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
+        function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
+        function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
 
         async function startQuiz() {
-            const topic = topicInput.value.trim();
-            const level = levelSelect.value;
             const quizType = quizTypeSelect.value;
-            if (quizType !== 'grammar' && !topic) { alert("Vui lòng nhập chủ đề!"); return; }
+            const topic = quizType !== 'grammar' ? topicSelect.value : 'Grammar';
+            const level = levelSelect.value;
 
             quizData = { topic, level, quizType };
             loadingTopic.textContent = `"${topic}"`;
@@ -187,24 +267,18 @@
 
             try {
                 let prompt;
-                if (quizType === 'vocabulary') {
-                    prompt = getVocabularyPrompt(level, topic, 5);
-                } else if (quizType === 'reading') {
-                    prompt = getReadingPrompt(level, topic, 3);
-                } else { // grammar
-                    prompt = getGrammarPrompt(level, 5);
-                }
+                if (quizType === 'vocabulary') prompt = getVocabularyPrompt(level, topic, 5);
+                else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, 3);
+                else prompt = getGrammarPrompt(level, 5);
                 
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseQuizJson(result.response.text());
-
                 if (!parsedData) throw new Error("AI did not return valid JSON data.");
                 
                 quizData.raw = parsedData;
                 currentQuestionIndex = 0; score = 0;
                 renderQuiz();
                 showView('quiz-view');
-
             } catch (error) {
                 showError(`Không thể tạo bài kiểm tra. Lỗi: ${error.message}.`);
             }
@@ -214,17 +288,11 @@
             const isReading = quizData.quizType === 'reading';
             const questions = isReading ? quizData.raw.questions : quizData.raw;
             const total = questions.length;
-            
             scoreEl.textContent = `Điểm: ${score}`;
             progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
             progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
-            
-            if (isReading) {
-                passageContainer.classList.remove('hidden');
-                passageText.textContent = quizData.raw.passage;
-            } else {
-                passageContainer.classList.add('hidden');
-            }
+            if (isReading) { passageContainer.classList.remove('hidden'); passageText.textContent = quizData.raw.passage; } 
+            else { passageContainer.classList.add('hidden'); }
             renderQuestion();
         }
 
@@ -232,17 +300,29 @@
             feedbackContainer.innerHTML = '';
             feedbackContainer.className = 'mt-6 p-4 rounded-lg min-h-[100px]';
             nextQuestionButton.classList.add('hidden');
-            
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const currentQuestion = questions[currentQuestionIndex];
-            
             questionText.textContent = currentQuestion.question;
             optionsContainer.innerHTML = '';
             const shuffledOptions = [...currentQuestion.options].sort(() => Math.random() - 0.5);
             shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
-                button.textContent = option;
-                button.className = "w-full text-left p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-sky-400 transition text-lg";
+                button.className = "w-full text-left p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-sky-400 transition text-lg flex items-center justify-between";
+                
+                const optionText = document.createElement('span');
+                optionText.textContent = option;
+                
+                const infoBtn = document.createElement('i');
+                infoBtn.className = 'info-icon';
+                infoBtn.textContent = 'i';
+                infoBtn.title = `Dịch nghĩa "${option}"`;
+                infoBtn.onclick = (e) => {
+                    e.stopPropagation(); // Ngăn không cho sự kiện click lan ra nút cha
+                    showTranslationModal(getTranslation(option));
+                };
+
+                button.appendChild(optionText);
+                button.appendChild(infoBtn);
                 button.onclick = () => handleAnswer(option);
                 optionsContainer.appendChild(button);
             });
@@ -252,13 +332,11 @@
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = selectedOption === currentQuestion.answer;
-            
             Array.from(optionsContainer.children).forEach(button => {
                 button.disabled = true; button.classList.add('opacity-70');
-                if (button.textContent === currentQuestion.answer) button.className = "w-full text-left p-4 border-2 border-green-500 bg-green-100 rounded-lg text-lg font-semibold";
-                else if (button.textContent === selectedOption) button.className = "w-full text-left p-4 border-2 border-red-500 bg-red-100 rounded-lg text-lg";
+                if (button.querySelector('span').textContent === currentQuestion.answer) button.className = "w-full text-left p-4 border-2 border-green-500 bg-green-100 rounded-lg text-lg flex items-center justify-between font-semibold";
+                else if (button.querySelector('span').textContent === selectedOption) button.className = "w-full text-left p-4 border-2 border-red-500 bg-red-100 rounded-lg text-lg flex items-center justify-between";
             });
-
             if (isCorrect) {
                 score++;
                 feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-green-100 text-green-800';
@@ -288,14 +366,11 @@
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const total = questions.length;
             if (auth.currentUser) {
+                await updateUserStreak(auth.currentUser.uid);
                 try {
                     await addDoc(collection(db, "quizResults"), {
-                        userId: auth.currentUser.uid,
-                        topic: quizData.topic,
-                        level: quizData.level,
-                        type: quizData.quizType,
-                        score: score,
-                        totalQuestions: total,
+                        userId: auth.currentUser.uid, topic: quizData.topic, level: quizData.level,
+                        type: quizData.quizType, score: score, totalQuestions: total,
                         createdAt: serverTimestamp()
                     });
                 } catch (e) { console.error("Lỗi khi lưu kết quả: ", e); }
@@ -331,6 +406,17 @@
             }
         }
         
+        function handleQuizTypeChange() {
+            const selectedType = quizTypeSelect.value;
+            if (selectedType === 'grammar') {
+                topicContainer.style.maxHeight = '0'; topicContainer.style.opacity = '0';
+                topicContainer.style.overflow = 'hidden'; topicContainer.style.marginTop = '0';
+            } else {
+                topicContainer.style.maxHeight = '100px'; topicContainer.style.opacity = '1';
+                topicContainer.style.overflow = 'visible'; topicContainer.style.marginTop = '1.5rem';
+            }
+        }
+
         loginButton.addEventListener('click', () => handleAuthAction('login'));
         registerButton.addEventListener('click', () => handleAuthAction('register'));
         logoutButton.addEventListener('click', handleLogout);
@@ -341,6 +427,11 @@
         backToSetupFromHistory.addEventListener('click', () => showView('setup-view'));
         viewHistoryFromResultButton.addEventListener('click', showHistory);
         nextQuestionButton.addEventListener('click', moveToNextQuestion);
+        quizTypeSelect.addEventListener('change', handleQuizTypeChange);
+        // NÂNG CẤP: Gán sự kiện cho các nút dịch thuật
+        translateQuestionBtn.addEventListener('click', () => showTranslationModal(getTranslation(questionText.textContent)));
+        closeTranslationModal.addEventListener('click', () => translationModal.classList.add('hidden'));
+        translationModal.addEventListener('click', (e) => { if (e.target === translationModal) { translationModal.classList.add('hidden'); } });
     </script>
 </body>
 </html>
