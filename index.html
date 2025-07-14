@@ -184,8 +184,11 @@
         let currentQuestionIndex = 0;
         let score = 0;
         let allUserResults = []; 
+        
         const synth = window.speechSynthesis;
-        let currentUtterance = null;
+        let audioState = 'idle'; 
+        let lastSpokenCharIndex = 0;
+        let isPausedByUser = false;
 
         async function updateUserStreak(userId) {
             const userRef = doc(db, "users", userId);
@@ -203,7 +206,6 @@
             } catch (error) { console.error("Error updating streak:", error); }
         }
 
-        // SỬA LỖI: Khối code xác thực đầy đủ
         onAuthStateChanged(auth, user => {
             if (user) { 
                 welcomeMessage.textContent = `Chào mừng, ${user.email}!`; 
@@ -345,19 +347,36 @@
             renderQuestion();
         }
 
-        function setupAudioPlayer() {
-            const script = quizData.raw.script;
-            currentUtterance = new SpeechSynthesisUtterance(script);
+        function playSpeech(text, startIndex = 0) {
+            if (synth.speaking) { synth.cancel(); }
+            isPausedByUser = false;
+            const utterance = new SpeechSynthesisUtterance(text.substring(startIndex));
             const voices = synth.getVoices();
-            currentUtterance.voice = voices.find(voice => voice.lang.startsWith('en-')) || voices[0];
-            currentUtterance.rate = 0.9;
+            utterance.voice = voices.find(voice => voice.lang.startsWith('en-')) || voices[0];
+            utterance.rate = 0.9;
+            utterance.onboundary = (event) => { lastSpokenCharIndex = startIndex + event.charIndex; };
+            utterance.onstart = () => { audioState = 'playing'; playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; };
+            utterance.onend = () => {
+                if (!isPausedByUser) {
+                    lastSpokenCharIndex = 0;
+                    audioState = 'idle';
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                    audioStatus.textContent = "Nghe lại";
+                    Array.from(optionsContainer.children).forEach(button => { button.disabled = false; button.classList.remove('opacity-50', 'cursor-not-allowed'); });
+                }
+            };
+            utterance.onerror = (e) => { audioState = 'idle'; audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
+            synth.speak(utterance);
+        }
+
+        function setupAudioPlayer() {
+            audioState = 'idle';
+            lastSpokenCharIndex = 0;
             playIcon.classList.remove('hidden');
             pauseIcon.classList.add('hidden');
             audioStatus.textContent = "Nhấn để nghe";
             playAudioBtn.disabled = false;
-            currentUtterance.onstart = () => { playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; };
-            currentUtterance.onend = () => { playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); audioStatus.textContent = "Nghe lại"; Array.from(optionsContainer.children).forEach(button => {button.disabled = false; button.classList.remove('opacity-50', 'cursor-not-allowed');}); };
-            currentUtterance.onerror = (e) => { audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
         }
 
         function renderQuestion() {
@@ -568,10 +587,18 @@
         translationModal.addEventListener('click', (e) => { if (e.target === translationModal) { translationModal.classList.add('hidden'); } });
         filterSkill.addEventListener('change', renderHistoryList);
         filterLevel.addEventListener('change', renderHistoryList);
+        
         playAudioBtn.addEventListener('click', () => {
-            if (synth.speaking) { synth.pause(); playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); audioStatus.textContent = "Tạm dừng"; } 
-            else if (synth.paused) { synth.resume(); playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; } 
-            else { synth.speak(currentUtterance); }
+            if (audioState === 'playing') {
+                isPausedByUser = true;
+                synth.cancel();
+                audioState = 'paused';
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                audioStatus.textContent = "Đã tạm dừng";
+            } else { 
+                playSpeech(quizData.raw.script, lastSpokenCharIndex);
+            }
         });
     </script>
 </body>
