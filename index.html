@@ -96,8 +96,10 @@
         
         <!-- Màn hình 1.5: Lịch sử làm bài -->
         <div id="history-view" class="view">
-            <div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-indigo-600">Lịch sử làm bài</h2><button id="backToSetupFromHistory" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
-            <div id="historyList" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+            <div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-indigo-600">Lịch sử & Phân tích</h2><button id="backToSetupFromHistory" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
+            <!-- NÂNG CẤP: Thêm khu vực Dashboard -->
+            <div id="historyDashboard" class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center"></div>
+            <div id="historyList" class="space-y-3 max-h-80 overflow-y-auto pr-2"></div>
         </div>
 
         <!-- Màn hình 2: Đang tải câu hỏi -->
@@ -167,10 +169,10 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-1.5-flash" });
+            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyDashboard = document.getElementById('historyDashboard'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
 
         let quizData = {};
         let currentQuestionIndex = 0;
@@ -235,77 +237,24 @@
                 const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
                 const result = await model.generateContent(prompt);
                 return result.response.text();
-            } catch (error) {
-                console.error("Translation error:", error);
-                return "Không thể dịch được.";
-            }
+            } catch (error) { console.error("Translation error:", error); return "Không thể dịch được."; }
         }
 
         function showTranslationModal(textPromise) {
             translationModal.classList.remove('hidden');
             translationResult.innerHTML = '<div class="spinner mx-auto"></div>';
-            textPromise.then(translatedText => {
-                translationResult.innerHTML = `<p class="text-lg">${translatedText}</p>`;
-            });
+            textPromise.then(translatedText => { translationResult.innerHTML = `<p class="text-lg">${translatedText}</p>`; });
         }
 
-        // SỬA LỖI: Cập nhật các prompt để yêu cầu câu trả lời đầy đủ
-        function getVocabularyPrompt(level, topic, count) {
-            return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}".
-            For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
-            Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE.
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects:
-            \`\`\`json
-            [
-              {
-                "question": "...",
-                "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
-                "answer": "Full text of the correct option",
-                "explanation": "..."
-              }
-            ]
-            \`\`\``;
-        }
-        function getReadingPrompt(level, topic, count) {
-            return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner.
-            For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE.
-            For the "answer" field in each question, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object:
-            \`\`\`json
-            {
-              "passage": "...",
-              "questions": [
-                {
-                  "question": "...",
-                  "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
-                  "answer": "Full text of the correct option",
-                  "explanation": "..."
-                }
-              ]
-            }
-            \`\`\``;
-        }
-        function getGrammarPrompt(level, count) {
-            return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals).
-            For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array.
-            Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule.
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects:
-            \`\`\`json
-            [
-              {
-                "question": "...",
-                "options": ["Full text of option A", "Full text of option B", "Full text of option C", "Full text of option D"],
-                "answer": "Full text of the correct option",
-                "explanation": "..."
-              }
-            ]
-            \`\`\``;
-        }
+        function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
+        function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. For the "answer" field in each question, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
+        function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
 
-        async function startQuiz() {
-            const quizType = quizTypeSelect.value;
-            const topic = quizType !== 'grammar' ? topicSelect.value : 'Grammar';
-            const level = levelSelect.value;
+        async function startQuiz(settings = null) {
+            const quizType = settings ? settings.type : quizTypeSelect.value;
+            const topic = settings ? settings.topic : (quizType !== 'grammar' ? topicSelect.value : 'Grammar');
+            const level = settings ? settings.level : levelSelect.value;
+            
             quizData = { topic, level, quizType };
             loadingTopic.textContent = `"${topic}"`;
             showView('loading-view');
@@ -352,19 +301,13 @@
             shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
                 button.className = "w-full text-left p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-sky-400 transition text-lg flex items-center justify-between";
-                
                 const optionText = document.createElement('span');
                 optionText.textContent = option;
-                
                 const infoBtn = document.createElement('i');
                 infoBtn.className = 'info-icon';
                 infoBtn.textContent = 'i';
                 infoBtn.title = `Dịch nghĩa "${option}"`;
-                infoBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    showTranslationModal(getTranslation(option));
-                };
-
+                infoBtn.onclick = (e) => { e.stopPropagation(); showTranslationModal(getTranslation(option)); };
                 button.appendChild(optionText);
                 button.appendChild(infoBtn);
                 button.onclick = () => handleAnswer(option);
@@ -375,7 +318,6 @@
         function handleAnswer(selectedOption) {
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const currentQuestion = questions[currentQuestionIndex];
-            // Logic so sánh giờ đã chính xác vì cả hai đều là chuỗi đầy đủ
             const isCorrect = selectedOption === currentQuestion.answer;
             Array.from(optionsContainer.children).forEach(button => {
                 button.disabled = true; button.classList.add('opacity-70');
@@ -429,22 +371,97 @@
             showView('result-view');
         }
 
+        // NÂNG CẤP: Hàm tính toán và hiển thị phân tích
+        function displayHistoryStats(results) {
+            if (results.length === 0) {
+                historyDashboard.innerHTML = '';
+                return;
+            }
+
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            const skillStats = { vocabulary: {c:0, t:0}, reading: {c:0, t:0}, grammar: {c:0, t:0} };
+            const topicStats = {};
+
+            results.forEach(res => {
+                totalCorrect += res.score;
+                totalQuestions += res.totalQuestions;
+                if (skillStats[res.type]) {
+                    skillStats[res.type].c += res.score;
+                    skillStats[res.type].t += res.totalQuestions;
+                }
+                if (res.type !== 'grammar') {
+                    if (!topicStats[res.topic]) topicStats[res.topic] = {c:0, t:0};
+                    topicStats[res.topic].c += res.score;
+                    topicStats[res.topic].t += res.totalQuestions;
+                }
+            });
+
+            const overallRate = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+            const findBest = (stats) => Object.entries(stats).filter(([, val]) => val.t > 0).reduce((best, [key, val]) => {
+                const currentRate = val.c / val.t;
+                return currentRate > best.rate ? { key, rate: currentRate } : best;
+            }, { key: 'N/A', rate: -1 });
+
+            const bestSkill = findBest(skillStats);
+            const bestTopic = findBest(topicStats);
+
+            const typeMap = { vocabulary: 'Từ vựng', reading: 'Đọc hiểu', grammar: 'Ngữ pháp' };
+
+            historyDashboard.innerHTML = `
+                <div class="bg-blue-100 p-4 rounded-lg"><div class="text-sm text-blue-600 font-semibold">Tỷ lệ đúng</div><div class="text-3xl font-bold text-blue-800">${overallRate}%</div></div>
+                <div class="bg-green-100 p-4 rounded-lg"><div class="text-sm text-green-600 font-semibold">Kỹ năng tốt nhất</div><div class="text-2xl font-bold text-green-800 capitalize">${typeMap[bestSkill.key] || 'Chưa có'}</div></div>
+                <div class="bg-purple-100 p-4 rounded-lg"><div class="text-sm text-purple-600 font-semibold">Chủ đề tốt nhất</div><div class="text-2xl font-bold text-purple-800 capitalize">${bestTopic.key}</div></div>
+            `;
+        }
+
         async function showHistory() {
             if (!auth.currentUser) { showError("Bạn cần đăng nhập để xem lịch sử."); return; }
             showView('history-view');
             historyList.innerHTML = '<div class="spinner mx-auto"></div>';
+            historyDashboard.innerHTML = ''; // Xóa dashboard cũ
+
             try {
                 const q = query(collection(db, "quizResults"), where("userId", "==", auth.currentUser.uid));
                 const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) { historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài.</p>'; return; }
-                historyList.innerHTML = '';
+                
+                if (querySnapshot.empty) {
+                    historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài nào.</p>';
+                    return;
+                }
+
                 const results = querySnapshot.docs.map(doc => doc.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                
+                displayHistoryStats(results); // Hiển thị phân tích
+
+                historyList.innerHTML = ''; // Xóa spinner
                 results.forEach(data => {
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleString('vi-VN') : 'Không rõ';
                     const typeText = data.type === 'reading' ? 'Đọc hiểu' : (data.type === 'grammar' ? 'Ngữ pháp' : 'Từ vựng');
-                    const topicText = data.type !== 'grammar' ? `<p class="font-bold text-lg text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-lg text-slate-800 capitalize">${typeText}</p>`;
-                    historyList.innerHTML += `<div class="bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="flex justify-between items-center">${topicText}<p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p></div><div class="flex justify-between items-center text-sm text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span><span>${date}</span></div></div>`;
+                    const topicText = data.type !== 'grammar' ? `<p class="font-bold text-base text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-base text-slate-800 capitalize">${typeText}</p>`;
+                    historyList.innerHTML += `
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    ${topicText}
+                                    <div class="text-xs text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span> | <span>${date}</span></div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p>
+                                    <button class="retry-button bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-type="${data.type}" data-topic="${data.topic || ''}" data-level="${data.level}">Làm lại</button>
+                                </div>
+                            </div>
+                        </div>`;
                 });
+
+                // Gán sự kiện cho các nút "Làm lại"
+                document.querySelectorAll('.retry-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const { type, topic, level } = e.target.dataset;
+                        startQuiz({ type, topic, level });
+                    });
+                });
+
             } catch (error) {
                 console.error("Lỗi khi tải lịch sử: ", error);
                 historyList.innerHTML = '<p class="text-center text-red-500">Không thể tải lịch sử.</p>';
@@ -465,7 +482,7 @@
         loginButton.addEventListener('click', () => handleAuthAction('login'));
         registerButton.addEventListener('click', () => handleAuthAction('register'));
         logoutButton.addEventListener('click', handleLogout);
-        startQuizButton.addEventListener('click', startQuiz);
+        startQuizButton.addEventListener('click', () => startQuiz());
         playAgainButton.addEventListener('click', () => showView('setup-view'));
         backToSetupButton.addEventListener('click', () => showView('setup-view'));
         showHistoryButton.addEventListener('click', showHistory);
