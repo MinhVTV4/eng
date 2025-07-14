@@ -46,14 +46,16 @@
                  <div class="flex flex-col items-end space-y-2"><button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Đăng xuất</button><button id="showHistoryButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Lịch sử</button></div>
             </div>
             <div class="space-y-6">
+                <!-- NÂNG CẤP: Thêm lựa chọn Ngữ pháp -->
                 <div>
                     <label for="quizTypeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn kỹ năng luyện tập:</label>
                     <select id="quizTypeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
                         <option value="vocabulary" selected>Từ vựng (Vocabulary)</option>
                         <option value="reading">Đọc hiểu (Reading)</option>
+                        <option value="grammar">Ngữ pháp (Grammar)</option>
                     </select>
                 </div>
-                <div><label for="topicInput" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label><input type="text" id="topicInput" value="Technology" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"><p class="text-sm text-slate-400 mt-1">Ví dụ: Travel, Food, Business, Cinema...</p></div>
+                <div><label for="topicInput" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label><input type="text" id="topicInput" value="Daily Life" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"><p class="text-sm text-slate-400 mt-1">Chủ đề áp dụng cho Từ vựng & Đọc hiểu.</p></div>
                 <div><label for="levelSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn trình độ của bạn:</label><select id="levelSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"><option value="A2">A2 (Beginner)</option><option value="B1" selected>B1 (Intermediate)</option><option value="B2">B2 (Upper-Intermediate)</option><option value="C1">C1 (Advanced)</option></select></div>
             </div>
             <button id="startQuizButton" class="mt-10 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>Bắt đầu làm bài</button>
@@ -72,19 +74,18 @@
 
         <!-- Màn hình 3: Làm bài kiểm tra -->
         <div id="quiz-view" class="view">
-            <div class="flex justify-between items-center mb-4"><div id="progress" class="text-lg font-semibold text-slate-600">Câu 1 / 3</div><div id="score" class="text-lg font-bold text-sky-600">Điểm: 0</div></div>
-            <div class="w-full bg-slate-200 rounded-full h-2.5 mb-8"><div id="progressBar" class="bg-sky-500 h-2.5 rounded-full" style="width: 33.33%"></div></div>
+            <div class="flex justify-between items-center mb-4"><div id="progress" class="text-lg font-semibold text-slate-600">Câu 1 / 5</div><div id="score" class="text-lg font-bold text-sky-600">Điểm: 0</div></div>
+            <div class="w-full bg-slate-200 rounded-full h-2.5 mb-8"><div id="progressBar" class="bg-sky-500 h-2.5 rounded-full" style="width: 20%"></div></div>
             <div id="passageContainer" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 hidden"><p id="passageText"></p></div>
             <div id="questionContainer" class="mb-6"><p id="questionText" class="text-xl md:text-2xl font-semibold leading-relaxed mb-6"></p><div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
             <div id="feedbackContainer" class="mt-6 p-4 rounded-lg min-h-[100px]"></div>
-            <!-- NÂNG CẤP: Nút để chuyển câu hỏi thủ công -->
             <button id="nextQuestionButton" class="hidden mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition">Tiếp tục</button>
         </div>
 
         <!-- Màn hình 4: Kết quả -->
         <div id="result-view" class="view text-center">
             <h2 class="text-3xl font-bold text-slate-800 mb-2">Hoàn thành!</h2><p class="text-slate-500 text-lg mb-6">Đây là kết quả của bạn:</p>
-            <div class="bg-sky-100 border-2 border-sky-300 rounded-xl p-8 mb-8"><p class="text-2xl font-semibold mb-2">Tổng điểm</p><p id="finalScore" class="text-6xl font-bold text-sky-600">2 / 3</p></div>
+            <div class="bg-sky-100 border-2 border-sky-300 rounded-xl p-8 mb-8"><p class="text-2xl font-semibold mb-2">Tổng điểm</p><p id="finalScore" class="text-6xl font-bold text-sky-600">4 / 5</p></div>
             <p id="resultMessage" class="text-lg mb-8"></p>
             <div class="flex space-x-4"><button id="playAgainButton" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition">Làm lại</button><button id="viewHistoryFromResultButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition">Xem lịch sử</button></div>
         </div>
@@ -117,7 +118,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-2.5-flash-latest" });
+            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicInput = document.getElementById('topicInput'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton');
@@ -169,20 +170,30 @@
             return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ] }\n\`\`\``;
         }
 
+        // NÂNG CẤP: Thêm prompt cho bài tập Ngữ pháp
+        function getGrammarPrompt(level, count) {
+            return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``;
+        }
+
         async function startQuiz() {
             const topic = topicInput.value.trim();
             const level = levelSelect.value;
             const quizType = quizTypeSelect.value;
-            if (!topic) { alert("Vui lòng nhập chủ đề!"); return; }
+            if (quizType !== 'grammar' && !topic) { alert("Vui lòng nhập chủ đề!"); return; }
 
             quizData = { topic, level, quizType };
             loadingTopic.textContent = `"${topic}"`;
             showView('loading-view');
 
             try {
-                const prompt = quizType === 'vocabulary' 
-                    ? getVocabularyPrompt(level, topic, 5)
-                    : getReadingPrompt(level, topic, 3);
+                let prompt;
+                if (quizType === 'vocabulary') {
+                    prompt = getVocabularyPrompt(level, topic, 5);
+                } else if (quizType === 'reading') {
+                    prompt = getReadingPrompt(level, topic, 3);
+                } else { // grammar
+                    prompt = getGrammarPrompt(level, 5);
+                }
                 
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseQuizJson(result.response.text());
@@ -220,7 +231,7 @@
         function renderQuestion() {
             feedbackContainer.innerHTML = '';
             feedbackContainer.className = 'mt-6 p-4 rounded-lg min-h-[100px]';
-            nextQuestionButton.classList.add('hidden'); // Ẩn nút "Tiếp tục" khi hiển thị câu hỏi mới
+            nextQuestionButton.classList.add('hidden');
             
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const currentQuestion = questions[currentQuestionIndex];
@@ -257,17 +268,13 @@
                 feedbackContainer.innerHTML = `<b class="font-bold">Chưa đúng.</b> Đáp án đúng là <b>"${currentQuestion.answer}"</b>. <p>${currentQuestion.explanation}</p>`;
             }
             scoreEl.textContent = `Điểm: ${score}`;
-            
-            // NÂNG CẤP: Hiển thị nút "Tiếp tục" thay vì tự động chuyển
             nextQuestionButton.classList.remove('hidden');
         }
 
-        // NÂNG CẤP: Hàm riêng để xử lý việc chuyển câu hỏi
         function moveToNextQuestion() {
             currentQuestionIndex++;
             const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
             const total = questions.length;
-
             if (currentQuestionIndex < total) {
                 progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
                 progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
@@ -314,8 +321,9 @@
                 const results = querySnapshot.docs.map(doc => doc.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
                 results.forEach(data => {
                     const date = data.createdAt ? data.createdAt.toDate().toLocaleString('vi-VN') : 'Không rõ';
-                    const typeText = data.type === 'reading' ? 'Đọc hiểu' : 'Từ vựng';
-                    historyList.innerHTML += `<div class="bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="flex justify-between items-center"><p class="font-bold text-lg text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p><p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p></div><div class="flex justify-between items-center text-sm text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span><span>${date}</span></div></div>`;
+                    const typeText = data.type === 'reading' ? 'Đọc hiểu' : (data.type === 'grammar' ? 'Ngữ pháp' : 'Từ vựng');
+                    const topicText = data.type !== 'grammar' ? `<p class="font-bold text-lg text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-lg text-slate-800 capitalize">${typeText}</p>`;
+                    historyList.innerHTML += `<div class="bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="flex justify-between items-center">${topicText}<p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p></div><div class="flex justify-between items-center text-sm text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span><span>${date}</span></div></div>`;
                 });
             } catch (error) {
                 console.error("Lỗi khi tải lịch sử: ", error);
@@ -332,7 +340,6 @@
         showHistoryButton.addEventListener('click', showHistory);
         backToSetupFromHistory.addEventListener('click', () => showView('setup-view'));
         viewHistoryFromResultButton.addEventListener('click', showHistory);
-        // NÂNG CẤP: Gán sự kiện cho nút "Tiếp tục"
         nextQuestionButton.addEventListener('click', moveToNextQuestion);
     </script>
 </body>
