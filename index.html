@@ -371,7 +371,7 @@
         function renderQuiz() {
             const isReading = quizData.quizType === 'reading';
             const isListening = quizData.quizType === 'listening';
-            const questions = isReading || isListening ? quizData.raw.questions : quizData.raw;
+            const questions = isReading || isListening ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             
             const typeMap = { vocabulary: 'Luyện tập Từ vựng', reading: 'Luyện tập Đọc hiểu', grammar: 'Luyện tập Ngữ pháp', listening: 'Luyện tập Nghe hiểu' };
@@ -447,7 +447,7 @@
             feedbackContainer.innerHTML = '';
             feedbackContainer.className = 'mt-6 p-4 rounded-lg min-h-[100px]';
             nextQuestionButton.classList.add('hidden');
-            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : quizData.raw;
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const currentQuestion = questions[currentQuestionIndex];
             
             questionText.textContent = currentQuestion.question;
@@ -497,7 +497,7 @@
         }
 
         function handleAnswer(selectedOption) {
-            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : quizData.raw;
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const currentQuestion = questions[currentQuestionIndex];
             const questionType = currentQuestion.type || 'multiple_choice';
             
@@ -529,7 +529,7 @@
         function moveToNextQuestion() {
             if (synth.speaking) synth.cancel();
             currentQuestionIndex++;
-            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : quizData.raw;
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             if (currentQuestionIndex < total) {
                 progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
@@ -542,7 +542,7 @@
         }
 
         async function showResult() {
-            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : quizData.raw;
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             if (auth.currentUser) {
                 await updateUserStreak(auth.currentUser.uid);
