@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI English Quiz - Luyện Tập Toàn Diện</title>
+    <!-- Tích hợp Tailwind CSS để làm giao diện -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .view { display: none; animation: fadeIn 0.5s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0ea5e9; animation: spin 1s ease-in-out infinite; }
+        .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #passageText { max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div id="appContainer" class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8 transition-all duration-500">
+
+        <!-- Màn hình 0: Đăng nhập / Đăng ký -->
+        <div id="auth-view" class="view active">
+            <h1 class="text-3xl font-bold text-center text-sky-600 mb-2">Chào mừng bạn!</h1>
+            <p class="text-center text-slate-500 mb-8">Đăng nhập hoặc Đăng ký để lưu tiến trình học</p>
+            <div class="space-y-4">
+                <div><label for="emailInput" class="block text-sm font-medium mb-1 text-slate-700">Email</label><input type="email" id="emailInput" placeholder="ten@email.com" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"></div>
+                <div><label for="passwordInput" class="block text-sm font-medium mb-1 text-slate-700">Mật khẩu</label><input type="password" id="passwordInput" placeholder="••••••••" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"></div>
+            </div>
+            <p id="authError" class="text-red-500 text-sm text-center mt-4 h-5"></p>
+            <div class="mt-6 space-y-3">
+                 <button id="loginButton" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-3 disabled:bg-sky-300"><span class="btn-text">Đăng nhập</span><div class="spinner btn-spinner hidden"></div></button>
+                 <button id="registerButton" class="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-3 disabled:bg-slate-400"><span class="btn-text">Đăng ký</span><div class="spinner btn-spinner hidden"></div></button>
+            </div>
+        </div>
+
+        <!-- Màn hình 1: Thiết lập bài kiểm tra -->
+        <div id="setup-view" class="view">
+            <div class="flex justify-between items-start mb-8">
+                 <div><h1 class="text-3xl font-bold text-sky-600">AI English Quiz</h1><p id="welcomeMessage" class="text-slate-500">Chào mừng trở lại!</p></div>
+                 <div class="flex flex-col items-end space-y-2"><button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Đăng xuất</button><button id="showHistoryButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Lịch sử</button></div>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label for="quizTypeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn kỹ năng luyện tập:</label>
+                    <select id="quizTypeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                        <option value="vocabulary" selected>Từ vựng (Vocabulary)</option>
+                        <option value="reading">Đọc hiểu (Reading)</option>
+                    </select>
+                </div>
+                <div><label for="topicInput" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label><input type="text" id="topicInput" value="Technology" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"><p class="text-sm text-slate-400 mt-1">Ví dụ: Travel, Food, Business, Cinema...</p></div>
+                <div><label for="levelSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn trình độ của bạn:</label><select id="levelSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"><option value="A2">A2 (Beginner)</option><option value="B1" selected>B1 (Intermediate)</option><option value="B2">B2 (Upper-Intermediate)</option><option value="C1">C1 (Advanced)</option></select></div>
+            </div>
+            <button id="startQuizButton" class="mt-10 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>Bắt đầu làm bài</button>
+        </div>
+        
+        <!-- Màn hình 1.5: Lịch sử làm bài -->
+        <div id="history-view" class="view">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-indigo-600">Lịch sử làm bài</h2><button id="backToSetupFromHistory" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
+            <div id="historyList" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+        </div>
+
+        <!-- Màn hình 2: Đang tải câu hỏi -->
+        <div id="loading-view" class="view text-center py-16">
+            <div class="spinner mx-auto mb-6"></div><h2 class="text-2xl font-semibold text-slate-700">Đang tạo bài kiểm tra...</h2><p class="text-slate-500">AI đang chuẩn bị các câu hỏi về chủ đề <b id="loadingTopic"></b> cho bạn. Vui lòng chờ!</p>
+        </div>
+
+        <!-- Màn hình 3: Làm bài kiểm tra -->
+        <div id="quiz-view" class="view">
+            <div class="flex justify-between items-center mb-4"><div id="progress" class="text-lg font-semibold text-slate-600">Câu 1 / 3</div><div id="score" class="text-lg font-bold text-sky-600">Điểm: 0</div></div>
+            <div class="w-full bg-slate-200 rounded-full h-2.5 mb-8"><div id="progressBar" class="bg-sky-500 h-2.5 rounded-full" style="width: 33.33%"></div></div>
+            <div id="passageContainer" class="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200 hidden"><p id="passageText"></p></div>
+            <div id="questionContainer" class="mb-6"><p id="questionText" class="text-xl md:text-2xl font-semibold leading-relaxed mb-6"></p><div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+            <div id="feedbackContainer" class="mt-6 p-4 rounded-lg min-h-[100px]"></div>
+            <!-- NÂNG CẤP: Nút để chuyển câu hỏi thủ công -->
+            <button id="nextQuestionButton" class="hidden mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition">Tiếp tục</button>
+        </div>
+
+        <!-- Màn hình 4: Kết quả -->
+        <div id="result-view" class="view text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">Hoàn thành!</h2><p class="text-slate-500 text-lg mb-6">Đây là kết quả của bạn:</p>
+            <div class="bg-sky-100 border-2 border-sky-300 rounded-xl p-8 mb-8"><p class="text-2xl font-semibold mb-2">Tổng điểm</p><p id="finalScore" class="text-6xl font-bold text-sky-600">2 / 3</p></div>
+            <p id="resultMessage" class="text-lg mb-8"></p>
+            <div class="flex space-x-4"><button id="playAgainButton" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition">Làm lại</button><button id="viewHistoryFromResultButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition">Xem lịch sử</button></div>
+        </div>
+        
+        <!-- Thông báo lỗi chung -->
+        <div id="error-view" class="view text-center text-red-600 bg-red-100 p-6 rounded-lg">
+             <h2 class="text-2xl font-bold mb-4">Đã xảy ra lỗi</h2><p id="errorMessage" class="mb-6"></p><button id="backToSetupButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">Quay lại</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+        import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
+            authDomain: "engai-374f7.firebaseapp.com",
+            projectId: "engai-374f7",
+            storageBucket: "engai-374f7.firebasestorage.app",
+            messagingSenderId: "793685525357",
+            appId: "1:793685525357:web:bf74f624247165fd53d064"
+        };
+
+        let app, auth, model, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            const ai = getAI(app, { backend: new GoogleAIBackend() });
+            model = getGenerativeModel(ai, { model: "gemini-1.5-flash-latest" });
+        } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
+
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), topicInput = document.getElementById('topicInput'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton');
+
+        let quizData = {};
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        onAuthStateChanged(auth, user => {
+            if (user) { welcomeMessage.textContent = `Chào mừng, ${user.email}!`; showView('setup-view'); } 
+            else { showView('auth-view'); }
+        });
+        const handleAuthAction = async (action) => {
+            const email = emailInput.value, password = passwordInput.value; authError.textContent = '';
+            if (!email || !password) { authError.textContent = 'Vui lòng nhập đủ email và mật khẩu.'; return; }
+            const button = action === 'login' ? loginButton : registerButton, otherButton = action === 'login' ? registerButton : loginButton;
+            const buttonText = button.querySelector('.btn-text'), spinner = button.querySelector('.spinner');
+            buttonText.textContent = action === 'login' ? 'Đang đăng nhập...' : 'Đang đăng ký...';
+            spinner.classList.remove('hidden'); button.disabled = true; otherButton.disabled = true;
+            try {
+                if (action === 'login') await signInWithEmailAndPassword(auth, email, password);
+                else await createUserWithEmailAndPassword(auth, email, password);
+            } catch (error) { authError.textContent = getFriendlyAuthError(error.code); } 
+            finally {
+                buttonText.textContent = action === 'login' ? 'Đăng nhập' : 'Đăng ký';
+                spinner.classList.add('hidden'); button.disabled = false; otherButton.disabled = false;
+            }
+        };
+        const handleLogout = async () => { try { await signOut(auth); } catch (error) { showError("Đăng xuất thất bại."); }};
+        function getFriendlyAuthError(c) { switch (c) { case 'auth/invalid-email': return 'Email không hợp lệ.'; case 'auth/user-not-found': case 'auth/wrong-password': return 'Email hoặc mật khẩu không đúng.'; case 'auth/email-already-in-use': return 'Email đã được sử dụng.'; case 'auth/weak-password': return 'Mật khẩu quá yếu.'; default: return 'Lỗi xác thực.'; } }
+
+        function showView(viewId) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(viewId).classList.add('active'); }
+        function showError(msg) { errorMessage.textContent = msg; showView('error-view'); }
+
+        function extractAndParseQuizJson(rawText) {
+            const quizRegex = /```json\s*([\s\S]*?)\s*```/;
+            const match = rawText.match(quizRegex);
+            let jsonString = (match && match[1]) ? match[1] : rawText;
+            jsonString = jsonString.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+            try { return JSON.parse(jsonString); } 
+            catch (error) { console.error("JSON Parse Error:", error, "String:", jsonString); return null; }
+        }
+
+        function getVocabularyPrompt(level, topic, count) {
+            return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ]\n\`\`\``;
+        }
+
+        function getReadingPrompt(level, topic, count) {
+            return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": [...], "answer": "...", "explanation": "..." } ] }\n\`\`\``;
+        }
+
+        async function startQuiz() {
+            const topic = topicInput.value.trim();
+            const level = levelSelect.value;
+            const quizType = quizTypeSelect.value;
+            if (!topic) { alert("Vui lòng nhập chủ đề!"); return; }
+
+            quizData = { topic, level, quizType };
+            loadingTopic.textContent = `"${topic}"`;
+            showView('loading-view');
+
+            try {
+                const prompt = quizType === 'vocabulary' 
+                    ? getVocabularyPrompt(level, topic, 5)
+                    : getReadingPrompt(level, topic, 3);
+                
+                const result = await model.generateContent(prompt);
+                const parsedData = extractAndParseQuizJson(result.response.text());
+
+                if (!parsedData) throw new Error("AI did not return valid JSON data.");
+                
+                quizData.raw = parsedData;
+                currentQuestionIndex = 0; score = 0;
+                renderQuiz();
+                showView('quiz-view');
+
+            } catch (error) {
+                showError(`Không thể tạo bài kiểm tra. Lỗi: ${error.message}.`);
+            }
+        }
+        
+        function renderQuiz() {
+            const isReading = quizData.quizType === 'reading';
+            const questions = isReading ? quizData.raw.questions : quizData.raw;
+            const total = questions.length;
+            
+            scoreEl.textContent = `Điểm: ${score}`;
+            progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
+            
+            if (isReading) {
+                passageContainer.classList.remove('hidden');
+                passageText.textContent = quizData.raw.passage;
+            } else {
+                passageContainer.classList.add('hidden');
+            }
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            feedbackContainer.innerHTML = '';
+            feedbackContainer.className = 'mt-6 p-4 rounded-lg min-h-[100px]';
+            nextQuestionButton.classList.add('hidden'); // Ẩn nút "Tiếp tục" khi hiển thị câu hỏi mới
+            
+            const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            questionText.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+            const shuffledOptions = [...currentQuestion.options].sort(() => Math.random() - 0.5);
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = "w-full text-left p-4 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-sky-400 transition text-lg";
+                button.onclick = () => handleAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedOption) {
+            const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
+            const currentQuestion = questions[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQuestion.answer;
+            
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true; button.classList.add('opacity-70');
+                if (button.textContent === currentQuestion.answer) button.className = "w-full text-left p-4 border-2 border-green-500 bg-green-100 rounded-lg text-lg font-semibold";
+                else if (button.textContent === selectedOption) button.className = "w-full text-left p-4 border-2 border-red-500 bg-red-100 rounded-lg text-lg";
+            });
+
+            if (isCorrect) {
+                score++;
+                feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-green-100 text-green-800';
+                feedbackContainer.innerHTML = `<b class="font-bold">Chính xác!</b><p>${currentQuestion.explanation}</p>`;
+            } else {
+                feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-red-100 text-red-800';
+                feedbackContainer.innerHTML = `<b class="font-bold">Chưa đúng.</b> Đáp án đúng là <b>"${currentQuestion.answer}"</b>. <p>${currentQuestion.explanation}</p>`;
+            }
+            scoreEl.textContent = `Điểm: ${score}`;
+            
+            // NÂNG CẤP: Hiển thị nút "Tiếp tục" thay vì tự động chuyển
+            nextQuestionButton.classList.remove('hidden');
+        }
+
+        // NÂNG CẤP: Hàm riêng để xử lý việc chuyển câu hỏi
+        function moveToNextQuestion() {
+            currentQuestionIndex++;
+            const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
+            const total = questions.length;
+
+            if (currentQuestionIndex < total) {
+                progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
+                progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        async function showResult() {
+            const questions = quizData.quizType === 'reading' ? quizData.raw.questions : quizData.raw;
+            const total = questions.length;
+            if (auth.currentUser) {
+                try {
+                    await addDoc(collection(db, "quizResults"), {
+                        userId: auth.currentUser.uid,
+                        topic: quizData.topic,
+                        level: quizData.level,
+                        type: quizData.quizType,
+                        score: score,
+                        totalQuestions: total,
+                        createdAt: serverTimestamp()
+                    });
+                } catch (e) { console.error("Lỗi khi lưu kết quả: ", e); }
+            }
+            finalScore.textContent = `${score} / ${total}`;
+            const percentage = (score / total) * 100;
+            if (percentage === 100) resultMessage.textContent = "Tuyệt vời! Bạn đã trả lời đúng tất cả!";
+            else if (percentage >= 70) resultMessage.textContent = "Làm tốt lắm! Kiến thức của bạn rất ổn.";
+            else if (percentage >= 40) resultMessage.textContent = "Khá lắm! Tiếp tục luyện tập nhé.";
+            else resultMessage.textContent = "Đừng nản lòng! Mỗi lần luyện tập là một bước tiến.";
+            showView('result-view');
+        }
+
+        async function showHistory() {
+            if (!auth.currentUser) { showError("Bạn cần đăng nhập để xem lịch sử."); return; }
+            showView('history-view');
+            historyList.innerHTML = '<div class="spinner mx-auto"></div>';
+            try {
+                const q = query(collection(db, "quizResults"), where("userId", "==", auth.currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) { historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài.</p>'; return; }
+                historyList.innerHTML = '';
+                const results = querySnapshot.docs.map(doc => doc.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                results.forEach(data => {
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleString('vi-VN') : 'Không rõ';
+                    const typeText = data.type === 'reading' ? 'Đọc hiểu' : 'Từ vựng';
+                    historyList.innerHTML += `<div class="bg-slate-50 p-4 rounded-lg border border-slate-200"><div class="flex justify-between items-center"><p class="font-bold text-lg text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p><p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p></div><div class="flex justify-between items-center text-sm text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span><span>${date}</span></div></div>`;
+                });
+            } catch (error) {
+                console.error("Lỗi khi tải lịch sử: ", error);
+                historyList.innerHTML = '<p class="text-center text-red-500">Không thể tải lịch sử.</p>';
+            }
+        }
+        
+        loginButton.addEventListener('click', () => handleAuthAction('login'));
+        registerButton.addEventListener('click', () => handleAuthAction('register'));
+        logoutButton.addEventListener('click', handleLogout);
+        startQuizButton.addEventListener('click', startQuiz);
+        playAgainButton.addEventListener('click', () => showView('setup-view'));
+        backToSetupButton.addEventListener('click', () => showView('setup-view'));
+        showHistoryButton.addEventListener('click', showHistory);
+        backToSetupFromHistory.addEventListener('click', () => showView('setup-view'));
+        viewHistoryFromResultButton.addEventListener('click', showHistory);
+        // NÂNG CẤP: Gán sự kiện cho nút "Tiếp tục"
+        nextQuestionButton.addEventListener('click', moveToNextQuestion);
+    </script>
+</body>
+</html>
