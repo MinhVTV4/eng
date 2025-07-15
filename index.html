@@ -290,7 +290,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-5.5-flash" });
+            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         // DOM Elements
