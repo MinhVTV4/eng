@@ -17,9 +17,9 @@
         .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0ea5e9; animation: spin 1s ease-in-out infinite; }
         .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList { max-height: 400px; overflow-y: auto; }
+        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList, #libraryList { max-height: 400px; overflow-y: auto; }
         .topic-container, .vocab-mode-container { transition: all 0.3s ease-in-out; overflow: hidden; }
-        #translationModal.hidden, #confirmModal.hidden { display: none; }
+        #translationModal.hidden, #confirmModal.hidden, #vocabModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .translate-icon { cursor: pointer; color: #3b82f6; margin-left: 8px; font-size: 1.25rem; display: inline-block; vertical-align: middle; }
@@ -79,6 +79,13 @@
                     </div>
                  </div>
             </div>
+
+            <!-- Nâng cấp: Thêm nút Thư viện -->
+            <button id="showLibraryButton" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                Thư viện bài tập
+            </button>
+            
             <div class="space-y-6">
                 <div>
                     <label for="quizTypeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn kỹ năng luyện tập:</label>
@@ -134,6 +141,15 @@
             <button id="startQuizButton" class="mt-10 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>Bắt đầu làm bài</button>
         </div>
         
+        <!-- Màn hình Thư viện bài tập -->
+        <div id="library-view" class="view">
+            <div class="flex justify-between items-center mb-4"><h2 class="text-3xl font-bold text-amber-600">Thư viện bài tập</h2><button id="backToSetupFromLibrary" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
+            <div id="libraryFilters" class="mb-4 flex flex-col md:flex-row gap-4">
+                <!-- Filters will be added here if needed -->
+            </div>
+            <div id="libraryList" class="space-y-3"></div>
+        </div>
+
         <!-- Màn hình 1.5: Lịch sử làm bài -->
         <div id="history-view" class="view">
             <div class="flex justify-between items-center mb-4"><h2 class="text-3xl font-bold text-indigo-600">Lịch sử & Phân tích</h2><button id="backToSetupFromHistory" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
@@ -239,12 +255,25 @@
         </div>
     </div>
 
+    <!-- Modal Từ vựng liên quan -->
+    <div id="vocabModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800">Từ vựng liên quan</h3>
+                <button id="closeVocabModal" class="text-2xl font-bold hover:text-red-500">&times;</button>
+            </div>
+            <div id="vocabList" class="space-y-3 max-h-80 overflow-y-auto">
+                <!-- Danh sách từ vựng sẽ được thêm vào đây -->
+            </div>
+        </div>
+    </div>
+
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
         import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
@@ -265,7 +294,7 @@
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         // DOM Elements
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn');
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
 
         // App State
         let quizData = {};
@@ -481,6 +510,12 @@
                 
                 quizData.raw = parsedData;
                 currentQuestionIndex = 0; score = 0;
+                
+                // Save the generated quiz to the library
+                if (!settings?.isRetry) { // Don't re-save a quiz being retried
+                    saveQuizToLibrary(quizData);
+                }
+
                 renderQuiz();
                 showView('quiz-view');
             } catch (error) {
@@ -1185,6 +1220,145 @@
             audioStatus.textContent = "Nhấn để nghe";
             playAudioBtn.disabled = false;
         }
+
+        // --- Library Functions ---
+        async function saveQuizToLibrary(quizDataToSave) {
+            if (!auth.currentUser) return;
+            const libraryRef = collection(db, "quizLibrary");
+            try {
+                const docRef = await addDoc(libraryRef, {
+                    creatorId: auth.currentUser.uid,
+                    topic: quizDataToSave.topic,
+                    level: quizDataToSave.level,
+                    quizType: quizDataToSave.quizType,
+                    vocabMode: quizDataToSave.vocabMode,
+                    count: quizDataToSave.count,
+                    quizContent: quizDataToSave.raw,
+                    createdAt: serverTimestamp()
+                });
+                // Now, extract and save vocabulary for the new library entry
+                extractAndSaveVocabulary(quizDataToSave.raw, docRef.id);
+            } catch (error) {
+                console.error("Error saving quiz to library:", error);
+            }
+        }
+
+        async function extractAndSaveVocabulary(quizContent, docId) {
+            const prompt = `From the following quiz JSON content, extract a list of 5 to 7 key vocabulary words. For each word, provide the English word, its Vietnamese meaning, and its IPA transcription. Format the output as a JSON array of objects. JSON: ${JSON.stringify(quizContent)}`;
+            try {
+                const result = await model.generateContent(prompt);
+                const parsedVocab = extractAndParseQuizJson(result.response.text());
+                if (parsedVocab) {
+                    const docRef = doc(db, "quizLibrary", docId);
+                    await updateDoc(docRef, {
+                        relatedVocabulary: parsedVocab
+                    });
+                }
+            } catch (error) {
+                console.error("Error extracting or saving vocabulary:", error);
+            }
+        }
+
+        async function showLibrary() {
+            showView('library-view');
+            libraryList.innerHTML = '<div class="spinner mx-auto"></div>';
+            const libraryRef = collection(db, "quizLibrary");
+            try {
+                const querySnapshot = await getDocs(query(libraryRef));
+                const quizzes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderLibraryList(quizzes);
+            } catch (error) {
+                console.error("Error fetching quiz library:", error);
+                libraryList.innerHTML = '<p class="text-center text-red-500">Không thể tải thư viện.</p>';
+            }
+        }
+
+        function renderLibraryList(quizzes) {
+            if (quizzes.length === 0) {
+                libraryList.innerHTML = '<p class="text-center text-slate-500">Thư viện của bạn còn trống. Hãy tạo một bài tập mới để thêm vào đây!</p>';
+                return;
+            }
+            libraryList.innerHTML = '';
+            quizzes.forEach(quiz => {
+                const date = quiz.createdAt ? new Date(quiz.createdAt.seconds * 1000).toLocaleDateString('vi-VN') : 'N/A';
+                const typeText = quiz.quizType === 'reading' ? 'Đọc hiểu' : (quiz.quizType === 'grammar' ? 'Ngữ pháp' : (quiz.quizType === 'listening' ? 'Nghe hiểu' : 'Từ vựng'));
+                const item = document.createElement('div');
+                item.className = 'bg-slate-50 p-3 rounded-lg border border-slate-200';
+                item.innerHTML = `
+                    <p class="font-bold text-base text-slate-800 capitalize">${quiz.topic} <span class="text-sm font-normal text-amber-600">(${typeText})</span></p>
+                    <div class="text-xs text-slate-500 mt-1">
+                        <span>Trình độ: ${quiz.level.toUpperCase()}</span> | <span>${quiz.count} câu</span> | <span>Ngày tạo: ${date}</span>
+                    </div>
+                    <div class="flex justify-end items-center space-x-2 mt-2 pt-2 border-t border-slate-200">
+                        <button class="view-vocab-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-quiz-id="${quiz.id}">Xem từ vựng</button>
+                        <button class="retry-library-btn bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-quiz-id="${quiz.id}">Làm lại</button>
+                    </div>`;
+                libraryList.appendChild(item);
+            });
+
+            document.querySelectorAll('.retry-library-btn').forEach(button => {
+                button.addEventListener('click', (e) => retrySavedQuiz(e.target.dataset.quizId));
+            });
+            document.querySelectorAll('.view-vocab-btn').forEach(button => {
+                button.addEventListener('click', (e) => showRelatedVocabulary(e.target.dataset.quizId));
+            });
+        }
+
+        async function retrySavedQuiz(quizId) {
+            const docRef = doc(db, "quizLibrary", quizId);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const savedQuiz = docSnap.data();
+                    startQuiz({
+                        type: savedQuiz.quizType,
+                        topic: savedQuiz.topic,
+                        level: savedQuiz.level,
+                        count: savedQuiz.count,
+                        isRetry: true // Flag to prevent re-saving
+                    });
+                    // Directly set quizData.raw from the saved content
+                    quizData.raw = savedQuiz.quizContent;
+                    currentQuestionIndex = 0;
+                    score = 0;
+                    renderQuiz();
+                    showView('quiz-view');
+                }
+            } catch (error) {
+                showError("Không thể tải lại bài tập này.");
+            }
+        }
+
+        async function showRelatedVocabulary(quizId) {
+            const docRef = doc(db, "quizLibrary", quizId);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().relatedVocabulary) {
+                    const vocabData = docSnap.data().relatedVocabulary;
+                    vocabList.innerHTML = '';
+                    vocabData.forEach(v => {
+                        const item = document.createElement('div');
+                        item.className = 'p-2 border-b';
+                        item.innerHTML = `
+                            <div class="flex items-center">
+                                <b class="text-lg text-slate-800">${v.word}</b>
+                                <span class="ml-2 text-slate-500">${v.ipa || ''}</span>
+                                <button class="speak-btn ml-auto" onclick="playSpeech('${v.word}')">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 hover:text-sky-800"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                </button>
+                            </div>
+                            <p class="text-slate-600">${v.meaning}</p>
+                        `;
+                        vocabList.appendChild(item);
+                    });
+                    vocabModal.classList.remove('hidden');
+                } else {
+                    showError("Không có từ vựng liên quan cho bài tập này.");
+                }
+            } catch (error) {
+                showError("Không thể tải danh sách từ vựng.");
+            }
+        }
         
         // --- Event Listeners & Setup ---
         function handleQuizTypeChange() {
@@ -1214,6 +1388,8 @@
         backToSetupButton.addEventListener('click', () => showView('setup-view'));
         showHistoryButton.addEventListener('click', showHistory);
         showNotebookButton.addEventListener('click', showNotebook);
+        showLibraryButton.addEventListener('click', showLibrary);
+        backToSetupFromLibrary.addEventListener('click', () => showView('setup-view'));
         backToSetupFromHistory.addEventListener('click', () => showView('setup-view'));
         backToSetupFromNotebook.addEventListener('click', () => showView('setup-view'));
         viewHistoryFromResultButton.addEventListener('click', showHistory);
@@ -1222,6 +1398,8 @@
         translateQuestionBtn.addEventListener('click', () => showTranslationModal(getTranslation(questionText.textContent)));
         closeTranslationModal.addEventListener('click', () => translationModal.classList.add('hidden'));
         translationModal.addEventListener('click', (e) => { if (e.target === translationModal) { translationModal.classList.add('hidden'); } });
+        closeVocabModal.addEventListener('click', () => vocabModal.classList.add('hidden'));
+        vocabModal.addEventListener('click', (e) => { if (e.target === vocabModal) { vocabModal.classList.add('hidden'); } });
         filterSkill.addEventListener('change', renderHistoryList);
         filterLevel.addEventListener('change', renderHistoryList);
         
