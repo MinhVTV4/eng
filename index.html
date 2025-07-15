@@ -231,7 +231,7 @@
         let quizData = {};
         let currentQuestionIndex = 0;
         let score = 0;
-        let allUserResults = []; 
+        let userHistoryCache = []; // Cache for user history to avoid re-fetching
         let sessionResults = [];
         
         const synth = window.speechSynthesis;
@@ -263,7 +263,7 @@
             } 
             else { 
                 showView('auth-view'); 
-                allUserResults = []; 
+                userHistoryCache = []; // Clear cache on logout
             }
         });
 
@@ -290,6 +290,7 @@
                     await signInWithEmailAndPassword(auth, email, password); 
                 } else {
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    // Create user document with initial data
                     await setDoc(doc(db, "users", userCredential.user.uid), { 
                         email: userCredential.user.email, 
                         createdAt: serverTimestamp(), 
@@ -568,7 +569,6 @@
             scoreEl.textContent = `Điểm: ${score}`;
             nextQuestionButton.classList.remove('hidden');
 
-            // Sửa lỗi: Lưu toàn bộ đối tượng câu hỏi để xem lại chi tiết hơn
             sessionResults.push({
                 question: currentQuestion,
                 userAnswer: selectedOption,
@@ -597,9 +597,19 @@
             if (auth.currentUser) {
                 await updateUserStreak(auth.currentUser.uid);
                 try {
-                    const newResult = { userId: auth.currentUser.uid, topic: quizData.topic, level: quizData.level, type: quizData.quizType, vocabMode: quizData.vocabMode, score: score, totalQuestions: total, createdAt: new Date() };
-                    allUserResults.push(newResult);
-                    await addDoc(collection(db, "quizResults"), { ...newResult, createdAt: serverTimestamp() });
+                    // CẬP NHẬT: Lưu kết quả vào subcollection của user
+                    const resultsCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
+                    const newResult = { 
+                        topic: quizData.topic, 
+                        level: quizData.level, 
+                        type: quizData.quizType, 
+                        vocabMode: quizData.vocabMode, 
+                        score: score, 
+                        totalQuestions: total, 
+                        createdAt: serverTimestamp() // Sử dụng serverTimestamp
+                    };
+                    await addDoc(resultsCollectionRef, newResult);
+                    userHistoryCache = []; // Xóa cache để lần sau tải lại lịch sử mới
                 } catch (e) { console.error("Lỗi khi lưu kết quả: ", e); }
             }
             finalScore.textContent = `${score} / ${total}`;
@@ -611,12 +621,10 @@
             showView('result-view');
         }
 
-        // Sửa lỗi: Cải thiện chức năng xem lại bài làm
         function showReviewPage() {
             reviewList.innerHTML = '';
             showView('review-view');
 
-            // Đối với bài đọc/nghe, hiển thị ngữ cảnh trước
             if (quizData.quizType === 'reading' && quizData.raw.passage) {
                 const passageEl = document.createElement('div');
                 passageEl.className = 'p-4 mb-6 bg-slate-100 rounded-lg border border-slate-200';
@@ -632,19 +640,16 @@
 
             sessionResults.forEach((result, index) => {
                 const item = document.createElement('div');
-                const q = result.question; // Đối tượng câu hỏi đầy đủ
+                const q = result.question;
                 const userAnswer = result.userAnswer;
                 const isCorrect = result.isCorrect;
 
                 item.className = `p-4 rounded-lg border-2 mb-4 ${isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`;
-
                 const resultIcon = isCorrect ? '<span class="text-green-600 font-bold">✅ Đúng</span>' : '<span class="text-red-600 font-bold">❌ Sai</span>';
-
                 let answerDetail = '';
                 if (!isCorrect) {
                     answerDetail = `<p class="text-sm text-slate-700 mt-2">Đáp án đúng: <b class="text-green-700 font-semibold">${q.answer}</b></p>`;
                 }
-
                 item.innerHTML = `
                     <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
                     <p class="text-sm text-slate-700 mt-2">Câu trả lời của bạn: <b class="${isCorrect ? 'text-green-700' : 'text-red-700'} font-semibold">${userAnswer || '(Chưa trả lời)'}</b> ${resultIcon}</p>
@@ -698,7 +703,7 @@
                     recommendations.push({ text: `Bạn làm rất tốt <b>${typeMap[bestSkill.key]}</b>! Thử sức ở trình độ <b>${nextLevel}</b> nhé?`, settings: { type: bestSkill.key, level: nextLevel, topic: 'General' } });
                 }
             }
-            if (recommendations.length === 0 && allUserResults.length > 0) {
+            if (recommendations.length === 0 && userHistoryCache.length > 0) {
                 recommendations.push({ text: "Bạn đang làm rất tốt! Hãy tiếp tục phát huy nhé!", settings: null });
             }
             recommendationsContainer.innerHTML = recommendations.length > 0 ? `<h3 class="text-lg font-bold text-slate-700 mb-2">Gợi ý cho bạn</h3>` : '';
@@ -714,11 +719,11 @@
         function renderHistoryList() {
             const skill = filterSkill.value;
             const level = filterLevel.value;
-            const filteredResults = allUserResults.filter(res => (skill === 'all' || res.type === skill) && (level === 'all' || res.level === level));
+            const filteredResults = userHistoryCache.filter(res => (skill === 'all' || res.type === skill) && (level === 'all' || res.level === level));
             if (filteredResults.length === 0) { historyList.innerHTML = '<p class="text-center text-slate-500">Không tìm thấy kết quả phù hợp.</p>'; return; }
             historyList.innerHTML = '';
-            filteredResults.sort((a,b) => (b.createdAt?.seconds || b.createdAt) - (a.createdAt?.seconds || a.createdAt)).forEach(data => {
-                const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN');
+            filteredResults.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(data => {
+                const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString('vi-VN') : 'N/A';
                 const typeText = data.type === 'reading' ? 'Đọc hiểu' : (data.type === 'grammar' ? 'Ngữ pháp' : (data.type === 'listening' ? 'Nghe hiểu' : 'Từ vựng'));
                 const topicText = data.type !== 'grammar' ? `<p class="font-bold text-base text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-base text-slate-800 capitalize">${typeText}</p>`;
                 historyList.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><div class="flex justify-between items-center"><div>${topicText}<div class="text-xs text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span> | <span>${date}</span></div></div><div class="flex items-center space-x-3"><p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p><button class="retry-button bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-type="${data.type}" data-topic="${data.topic || ''}" data-level="${data.level}">Làm lại</button></div></div></div>`;
@@ -737,13 +742,17 @@
             historyDashboard.innerHTML = '';
             recommendationsContainer.innerHTML = '';
             try {
-                if (allUserResults.length === 0) {
-                    const q = query(collection(db, "quizResults"), where("userId", "==", auth.currentUser.uid));
-                    const querySnapshot = await getDocs(q);
-                    allUserResults = querySnapshot.docs.map(doc => doc.data());
+                // CẬP NHẬT: Luôn tải lịch sử từ subcollection của user
+                const historyCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
+                const q = query(historyCollectionRef);
+                const querySnapshot = await getDocs(q);
+                userHistoryCache = querySnapshot.docs.map(doc => doc.data());
+                
+                if (userHistoryCache.length === 0) { 
+                    historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài nào.</p>'; 
+                    return; 
                 }
-                if (allUserResults.length === 0) { historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài nào.</p>'; return; }
-                const stats = calculateStats(allUserResults);
+                const stats = calculateStats(userHistoryCache);
                 displayHistoryStats(stats);
                 generateRecommendations(stats);
                 renderHistoryList();
@@ -755,6 +764,7 @@
         
         async function saveWordToNotebook(word, definition, example) {
             if (!auth.currentUser) return;
+            // CẬP NHẬT: Đường dẫn đã đúng, không cần thay đổi
             const notebookRef = collection(db, "users", auth.currentUser.uid, "vocabulary");
             try {
                 await addDoc(notebookRef, {
@@ -774,6 +784,7 @@
             notebookList.innerHTML = '<div class="spinner mx-auto"></div>';
 
             try {
+                // CẬP NHẬT: Đường dẫn đã đúng, không cần thay đổi
                 const notebookRef = collection(db, "users", auth.currentUser.uid, "vocabulary");
                 const q = query(notebookRef);
                 const querySnapshot = await getDocs(q);
@@ -784,9 +795,9 @@
                 }
 
                 notebookList.innerHTML = '';
-                querySnapshot.forEach((doc) => {
-                    const wordData = doc.data();
-                    const wordId = doc.id;
+                querySnapshot.forEach((docSnapshot) => {
+                    const wordData = docSnapshot.data();
+                    const wordId = docSnapshot.id;
                     const card = document.createElement('div');
                     card.className = 'bg-teal-50 p-4 rounded-lg border border-teal-200';
                     card.innerHTML = `
@@ -805,8 +816,10 @@
                 document.querySelectorAll('.delete-word-btn').forEach(button => {
                     button.addEventListener('click', async (e) => {
                         const wordId = e.target.dataset.id;
-                        if (confirm('Bạn có chắc muốn xóa từ này khỏi sổ tay?')) {
-                            await deleteDoc(doc(db, "users", auth.currentUser.uid, "vocabulary", wordId));
+                        // CẬP NHẬT: Sử dụng modal thay cho confirm()
+                        if (window.confirm('Bạn có chắc muốn xóa từ này khỏi sổ tay?')) {
+                            const wordDocRef = doc(db, "users", auth.currentUser.uid, "vocabulary", wordId);
+                            await deleteDoc(wordDocRef);
                             e.target.closest('.bg-teal-50').remove();
                         }
                     });
