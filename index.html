@@ -290,7 +290,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+            model = getGenerativeModel(ai, { model: "gemini-5.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         // DOM Elements
@@ -470,7 +470,7 @@
         function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getFillInTheBlankPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'fill-in-the-blank' vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with the target word replaced by "___". Also provide the correct word in the "answer" field. The "answer" MUST be a single word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "fill_in_the_blank", "question": "The government plans to ___ a new high-speed railway.", "answer": "construct", "explanation": "Construct có nghĩa là 'xây dựng', phù hợp với ngữ cảnh của câu." } ]\n\`\`\``; }
         function getWordFormationPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'word-formation' questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with a blank and a base word in parentheses. The user must type the correct form of the base word. The "answer" MUST be the single, correctly formed word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "word_formation", "question": "Her ___ to the team was a huge benefit. (contribute)", "answer": "contribution", "explanation": "Cần một danh từ ở đây. 'Contribution' là dạng danh từ của động từ 'contribute'." } ]\n\`\`\``; }
-        function getMixedVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate a mixed set of ${count} vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". The set should include a mix of "multiple_choice", "fill_in_the_blank", "word_formation", "word_scramble", and "matching" types. For each question object, you MUST include a "type" field. - For "multiple_choice": include "options" and "answer" (full text). - For "fill_in_the_blank": the question should contain "___", and the "answer" is the single word to fill it. - For "word_formation": the question should contain a base word in parentheses, and the "answer" is the single, correctly formed word. - For "word_scramble": provide a "clue" (Vietnamese hint) and the "answer" word. - For "matching": provide an array of objects, each with a "word" and "meaning". Provide a brief, helpful explanation IN VIETNAMESE for every question except word_scramble and matching. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects.`; }
+        function getMixedVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate a mixed set of ${count} vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". The set should include a mix of "multiple_choice", "fill_in_the_blank", "word_formation", and "word_scramble" types. When generating a "matching" question, it must be a single question object with a "type" of "matching" and a "pairs" array containing multiple word-meaning objects. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects.`; }
         function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. For the "answer" field in each question, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
         function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getListeningPrompt(level, topic, count) { return `You are an expert English teacher. Create a listening comprehension quiz. 1. Generate one short, clear monologue or a simple two-person dialogue (about 50-80 words). The topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. 2. Based on the script, generate ${count} multiple-choice questions. 3. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. 4. For the "answer" field in each question, you MUST provide the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "script": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
@@ -500,9 +500,9 @@
                         default: prompt = getMixedVocabularyPrompt(level, topic, count);
                     }
                 }
-                else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, count);
+                else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, 3);
                 else if (quizType === 'grammar') prompt = getGrammarPrompt(level, count);
-                else prompt = getListeningPrompt(level, topic, count);
+                else prompt = getListeningPrompt(level, topic, 3);
                 
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseQuizJson(result.response.text());
@@ -615,6 +615,11 @@
                     meaningsCol.className = 'space-y-3';
 
                     const pairs = currentQuestion.pairs;
+                     if (!Array.isArray(pairs)) {
+                        console.error("Invalid matching question format: 'pairs' is not an array.", currentQuestion);
+                        showError("Đã xảy ra lỗi khi hiển thị câu hỏi nối từ. Dữ liệu không hợp lệ.");
+                        return;
+                    }
                     const shuffledMeanings = [...pairs].sort(() => Math.random() - 0.5);
                     
                     matchingState.correctPairs = 0; // Reset counter
@@ -1226,7 +1231,36 @@
             if (!auth.currentUser) return;
             const libraryRef = collection(db, "quizLibrary");
             try {
-                const docRef = await addDoc(libraryRef, {
+                 const relatedVocabulary = [];
+                const quizContent = quizDataToSave.raw;
+
+                if (Array.isArray(quizContent)) {
+                    quizContent.forEach(q => {
+                        if (q.type === 'matching' && Array.isArray(q.pairs)) {
+                            q.pairs.forEach(pair => {
+                                relatedVocabulary.push({
+                                    word: pair.word,
+                                    meaning: pair.meaning,
+                                    ipa: '' // IPA not available in this type
+                                });
+                            });
+                        } else if (q.word && q.type === 'flashcard') {
+                             relatedVocabulary.push({
+                                word: q.word,
+                                meaning: q.meaning,
+                                ipa: q.ipa || ''
+                            });
+                        } else if (q.answer) {
+                            relatedVocabulary.push({
+                                word: q.answer,
+                                meaning: q.explanation || q.clue || '',
+                                ipa: q.ipa || ''
+                            });
+                        }
+                    });
+                }
+
+                await addDoc(libraryRef, {
                     creatorId: auth.currentUser.uid,
                     topic: quizDataToSave.topic,
                     level: quizDataToSave.level,
@@ -1234,28 +1268,11 @@
                     vocabMode: quizDataToSave.vocabMode,
                     count: quizDataToSave.count,
                     quizContent: quizDataToSave.raw,
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    relatedVocabulary: relatedVocabulary
                 });
-                // Now, extract and save vocabulary for the new library entry
-                extractAndSaveVocabulary(quizDataToSave.raw, docRef.id);
             } catch (error) {
                 console.error("Error saving quiz to library:", error);
-            }
-        }
-
-        async function extractAndSaveVocabulary(quizContent, docId) {
-            const prompt = `From the following quiz JSON content, extract a list of 5 to 7 key vocabulary words. For each word, provide the English word, its Vietnamese meaning, and its IPA transcription. Format the output as a JSON array of objects. JSON: ${JSON.stringify(quizContent)}`;
-            try {
-                const result = await model.generateContent(prompt);
-                const parsedVocab = extractAndParseQuizJson(result.response.text());
-                if (parsedVocab) {
-                    const docRef = doc(db, "quizLibrary", docId);
-                    await updateDoc(docRef, {
-                        relatedVocabulary: parsedVocab
-                    });
-                }
-            } catch (error) {
-                console.error("Error extracting or saving vocabulary:", error);
             }
         }
 
@@ -1310,15 +1327,16 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const savedQuiz = docSnap.data();
-                    startQuiz({
-                        type: savedQuiz.quizType,
+                    quizData = {
                         topic: savedQuiz.topic,
                         level: savedQuiz.level,
+                        quizType: savedQuiz.quizType,
+                        vocabMode: savedQuiz.vocabMode,
                         count: savedQuiz.count,
-                        isRetry: true // Flag to prevent re-saving
-                    });
-                    // Directly set quizData.raw from the saved content
-                    quizData.raw = savedQuiz.quizContent;
+                        raw: savedQuiz.quizContent,
+                        isRetry: true
+                    };
+                    sessionResults = [];
                     currentQuestionIndex = 0;
                     score = 0;
                     renderQuiz();
