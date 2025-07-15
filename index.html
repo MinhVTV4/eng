@@ -19,7 +19,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList { max-height: 400px; overflow-y: auto; }
         .topic-container, .vocab-mode-container { transition: all 0.3s ease-in-out; overflow: hidden; }
-        #translationModal.hidden { display: none; }
+        #translationModal.hidden, #confirmModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .translate-icon { cursor: pointer; color: #3b82f6; margin-left: 8px; font-size: 1.25rem; display: inline-block; vertical-align: middle; }
@@ -178,7 +178,7 @@
         <div id="review-view" class="view">
              <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold text-purple-600">Xem lại bài làm</h2>
-                <button id="backToResultButton" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button>
+                <button id="backToPreviousViewButton" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button>
             </div>
             <div id="reviewList" class="space-y-4">
                 <!-- Nội dung xem lại sẽ được thêm vào đây -->
@@ -202,11 +202,24 @@
         </div>
     </div>
 
+    <!-- Modal xác nhận -->
+    <div id="confirmModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-2">Xác nhận</h3>
+            <p id="confirmMessage" class="text-slate-600 mb-6">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirmCancelBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-5 rounded-lg">Hủy</button>
+                <button id="confirmOkBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-5 rounded-lg">Xóa</button>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
         import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
@@ -226,19 +239,56 @@
             model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToResultButton = document.getElementById('backToResultButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal');
+        // DOM Elements
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn');
 
+        // App State
         let quizData = {};
         let currentQuestionIndex = 0;
         let score = 0;
-        let userHistoryCache = []; // Cache for user history to avoid re-fetching
+        let userHistoryCache = []; 
         let sessionResults = [];
+        let reviewCameFrom = 'result-view'; // To know where to go back from review
         
+        // Audio State
         const synth = window.speechSynthesis;
         let audioState = 'idle'; 
         let lastSpokenCharIndex = 0;
         let isPausedByUser = false;
 
+        // --- Core Functions ---
+        function showView(viewId) { 
+            if (synth.speaking) { synth.cancel(); }
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
+            document.getElementById(viewId).classList.add('active'); 
+        }
+
+        function showError(msg) { 
+            errorMessage.textContent = msg; 
+            showView('error-view'); 
+        }
+
+        // --- Confirmation Modal ---
+        function showConfirmModal(message, onConfirm) {
+            confirmMessage.textContent = message;
+            confirmModal.classList.remove('hidden');
+
+            const handleConfirm = () => {
+                onConfirm();
+                hideConfirmModal();
+            };
+
+            const hideConfirmModal = () => {
+                confirmModal.classList.add('hidden');
+                confirmOkBtn.removeEventListener('click', handleConfirm);
+                confirmCancelBtn.removeEventListener('click', hideConfirmModal);
+            };
+
+            confirmOkBtn.addEventListener('click', handleConfirm);
+            confirmCancelBtn.addEventListener('click', hideConfirmModal);
+        }
+
+        // --- Auth Functions ---
         async function updateUserStreak(userId) {
             const userRef = doc(db, "users", userId);
             const today = new Date().toISOString().slice(0, 10);
@@ -260,10 +310,9 @@
                 welcomeMessage.textContent = `Chào mừng, ${user.email}!`; 
                 updateUserStreak(user.uid); 
                 showView('setup-view'); 
-            } 
-            else { 
+            } else { 
                 showView('auth-view'); 
-                userHistoryCache = []; // Clear cache on logout
+                userHistoryCache = []; 
             }
         });
 
@@ -290,7 +339,6 @@
                     await signInWithEmailAndPassword(auth, email, password); 
                 } else {
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    // Create user document with initial data
                     await setDoc(doc(db, "users", userCredential.user.uid), { 
                         email: userCredential.user.email, 
                         createdAt: serverTimestamp(), 
@@ -310,7 +358,6 @@
 
         const handleLogout = async () => { 
             try { 
-                if (synth.speaking) { synth.cancel(); }
                 await signOut(auth); 
             } catch (error) { 
                 showError("Đăng xuất thất bại."); 
@@ -328,8 +375,7 @@
             } 
         }
 
-        function showView(viewId) { if (synth.speaking) { synth.cancel(); } document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(viewId).classList.add('active'); }
-        function showError(msg) { errorMessage.textContent = msg; showView('error-view'); }
+        // --- AI & Quiz Generation ---
         function extractAndParseQuizJson(rawText) {
             const quizRegex = /```json\s*([\s\S]*?)\s*```/;
             const match = rawText.match(quizRegex);
@@ -338,6 +384,7 @@
             try { return JSON.parse(jsonString); } 
             catch (error) { console.error("JSON Parse Error:", error, "String:", jsonString); return null; }
         }
+
         async function getTranslation(text) {
             try {
                 const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
@@ -345,12 +392,14 @@
                 return result.response.text();
             } catch (error) { console.error("Translation error:", error); return "Không thể dịch được."; }
         }
+
         function showTranslationModal(textPromise) {
             translationModal.classList.remove('hidden');
             translationResult.innerHTML = '<div class="spinner mx-auto"></div>';
             textPromise.then(translatedText => { translationResult.innerHTML = `<p class="text-lg">${translatedText}</p>`; });
         }
-
+        
+        // Prompt functions (unchanged)
         function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getFillInTheBlankPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'fill-in-the-blank' vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with the target word replaced by "___". Also provide the correct word in the "answer" field. The "answer" MUST be a single word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "fill_in_the_blank", "question": "The government plans to ___ a new high-speed railway.", "answer": "construct", "explanation": "Construct có nghĩa là 'xây dựng', phù hợp với ngữ cảnh của câu." } ]\n\`\`\``; }
         function getWordFormationPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'word-formation' questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with a blank and a base word in parentheses. The user must type the correct form of the base word. The "answer" MUST be the single, correctly formed word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "word_formation", "question": "Her ___ to the team was a huge benefit. (contribute)", "answer": "contribution", "explanation": "Cần một danh từ ở đây. 'Contribution' là dạng danh từ của động từ 'contribute'." } ]\n\`\`\``; }
@@ -359,6 +408,7 @@
         function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getListeningPrompt(level, topic, count) { return `You are an expert English teacher. Create a listening comprehension quiz. 1. Generate one short, clear monologue or a simple two-person dialogue (about 50-80 words). The topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. 2. Based on the script, generate ${count} multiple-choice questions. 3. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. 4. For the "answer" field in each question, you MUST provide the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "script": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
 
+        // --- Quiz Lifecycle ---
         async function startQuiz(settings = null) {
             sessionResults = []; 
             const quizType = settings ? settings.type : quizTypeSelect.value;
@@ -421,54 +471,6 @@
             transcriptContainer.classList.add('hidden'); 
             if (isListening) setupAudioPlayer();
             renderQuestion();
-        }
-
-        function playSpeech(text, startIndex = 0) {
-            if (synth.speaking) { synth.cancel(); }
-            isPausedByUser = false;
-            const utterance = new SpeechSynthesisUtterance(text.substring(startIndex));
-            const voices = synth.getVoices();
-            utterance.voice = voices.find(voice => voice.lang.startsWith('en-')) || voices[0];
-            utterance.rate = 0.9;
-            const words = text.split(/(\s+)/);
-            const wordElements = words.map(word => { const span = document.createElement('span'); span.textContent = word; return span; });
-            transcriptContainer.innerHTML = '';
-            wordElements.forEach(el => transcriptContainer.appendChild(el));
-            let charCounter = 0;
-            const wordBoundaries = words.map(word => { const start = charCounter; charCounter += word.length; return { word, start, end: charCounter }; });
-            utterance.onboundary = (event) => {
-                lastSpokenCharIndex = startIndex + event.charIndex;
-                wordElements.forEach(el => el.classList.remove('highlight-word'));
-                for(let i = 0; i < wordBoundaries.length; i++) {
-                    if (lastSpokenCharIndex >= wordBoundaries[i].start && lastSpokenCharIndex < wordBoundaries[i].end) {
-                        wordElements[i].classList.add('highlight-word');
-                        break;
-                    }
-                }
-            };
-            utterance.onstart = () => { audioState = 'playing'; playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; };
-            utterance.onend = () => {
-                if (!isPausedByUser) {
-                    lastSpokenCharIndex = 0;
-                    audioState = 'idle';
-                    playIcon.classList.remove('hidden');
-                    pauseIcon.classList.add('hidden');
-                    audioStatus.textContent = "Nghe lại";
-                    Array.from(optionsContainer.children).forEach(button => { button.disabled = false; button.classList.remove('opacity-50', 'cursor-not-allowed'); });
-                    wordElements.forEach(el => el.classList.remove('highlight-word'));
-                }
-            };
-            utterance.onerror = (e) => { audioState = 'idle'; audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
-            synth.speak(utterance);
-        }
-
-        function setupAudioPlayer() {
-            audioState = 'idle';
-            lastSpokenCharIndex = 0;
-            playIcon.classList.remove('hidden');
-            pauseIcon.classList.add('hidden');
-            audioStatus.textContent = "Nhấn để nghe";
-            playAudioBtn.disabled = false;
         }
 
         function renderQuestion() {
@@ -577,15 +579,11 @@
         }
 
         function moveToNextQuestion() {
-            if (synth.speaking) synth.cancel();
             currentQuestionIndex++;
             const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             if (currentQuestionIndex < total) {
-                progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
-                progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
-                if (quizData.quizType === 'listening') setupAudioPlayer();
-                renderQuestion();
+                renderQuiz();
             } else {
                 showResult();
             }
@@ -597,7 +595,6 @@
             if (auth.currentUser) {
                 await updateUserStreak(auth.currentUser.uid);
                 try {
-                    // CẬP NHẬT: Lưu kết quả vào subcollection của user
                     const resultsCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
                     const newResult = { 
                         topic: quizData.topic, 
@@ -606,10 +603,15 @@
                         vocabMode: quizData.vocabMode, 
                         score: score, 
                         totalQuestions: total, 
-                        createdAt: serverTimestamp() // Sử dụng serverTimestamp
+                        createdAt: serverTimestamp(),
+                        results: sessionResults, 
+                        context: { 
+                            passage: quizData.raw.passage || null,
+                            script: quizData.raw.script || null
+                        }
                     };
                     await addDoc(resultsCollectionRef, newResult);
-                    userHistoryCache = []; // Xóa cache để lần sau tải lại lịch sử mới
+                    userHistoryCache = []; 
                 } catch (e) { console.error("Lỗi khi lưu kết quả: ", e); }
             }
             finalScore.textContent = `${score} / ${total}`;
@@ -621,24 +623,26 @@
             showView('result-view');
         }
 
-        function showReviewPage() {
+        // --- Review & History Functions ---
+        function showReviewPage(results, context, cameFromView) {
             reviewList.innerHTML = '';
+            reviewCameFrom = cameFromView; 
             showView('review-view');
 
-            if (quizData.quizType === 'reading' && quizData.raw.passage) {
+            if (context?.passage) {
                 const passageEl = document.createElement('div');
                 passageEl.className = 'p-4 mb-6 bg-slate-100 rounded-lg border border-slate-200';
-                passageEl.innerHTML = `<h3 class="text-lg font-bold mb-2 text-slate-700">Đoạn văn</h3><p>${quizData.raw.passage}</p>`;
+                passageEl.innerHTML = `<h3 class="text-lg font-bold mb-2 text-slate-700">Đoạn văn</h3><p>${context.passage}</p>`;
                 reviewList.appendChild(passageEl);
             }
-            if (quizData.quizType === 'listening' && quizData.raw.script) {
+            if (context?.script) {
                 const scriptEl = document.createElement('div');
                 scriptEl.className = 'p-4 mb-6 bg-slate-100 rounded-lg border border-slate-200';
-                scriptEl.innerHTML = `<h3 class="text-lg font-bold mb-2 text-slate-700">Lời thoại</h3><p class="italic">"${quizData.raw.script}"</p>`;
+                scriptEl.innerHTML = `<h3 class="text-lg font-bold mb-2 text-slate-700">Lời thoại</h3><p class="italic">"${context.script}"</p>`;
                 reviewList.appendChild(scriptEl);
             }
 
-            sessionResults.forEach((result, index) => {
+            results.forEach((result, index) => {
                 const item = document.createElement('div');
                 const q = result.question;
                 const userAnswer = result.userAnswer;
@@ -659,7 +663,94 @@
                 reviewList.appendChild(item);
             });
         }
+        
+        async function reviewHistoricQuiz(resultId) {
+            if (!auth.currentUser) return;
+            historyList.innerHTML = '<div class="spinner mx-auto"></div>'; 
+            try {
+                const resultDocRef = doc(db, "users", auth.currentUser.uid, "quizResults", resultId);
+                const docSnap = await getDoc(resultDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    showReviewPage(data.results, data.context, 'history-view');
+                } else {
+                    showError("Không tìm thấy dữ liệu bài làm này.");
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải bài làm để xem lại:", error);
+                showError("Không thể tải bài làm để xem lại.");
+            }
+        }
 
+        async function showHistory() {
+            if (!auth.currentUser) { showError("Bạn cần đăng nhập để xem lịch sử."); return; }
+            showView('history-view');
+            historyList.innerHTML = '<div class="spinner mx-auto"></div>';
+            historyDashboard.innerHTML = '';
+            recommendationsContainer.innerHTML = '';
+            try {
+                const historyCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
+                const q = query(historyCollectionRef);
+                const querySnapshot = await getDocs(q);
+                userHistoryCache = querySnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                
+                if (userHistoryCache.length === 0) { 
+                    historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài nào.</p>'; 
+                    historyDashboard.innerHTML = '';
+                    recommendationsContainer.innerHTML = '';
+                    return; 
+                }
+                const stats = calculateStats(userHistoryCache);
+                displayHistoryStats(stats);
+                generateRecommendations(stats);
+                renderHistoryList();
+            } catch (error) {
+                console.error("Lỗi khi tải lịch sử: ", error);
+                historyList.innerHTML = '<p class="text-center text-red-500">Không thể tải lịch sử.</p>';
+            }
+        }
+        
+        function renderHistoryList() {
+            const skill = filterSkill.value;
+            const level = filterLevel.value;
+            const filteredResults = userHistoryCache.filter(res => (skill === 'all' || res.type === skill) && (level === 'all' || res.level === level));
+            if (filteredResults.length === 0) { historyList.innerHTML = '<p class="text-center text-slate-500">Không tìm thấy kết quả phù hợp.</p>'; return; }
+            historyList.innerHTML = '';
+            filteredResults.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(data => {
+                const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString('vi-VN') : 'N/A';
+                const typeText = data.type === 'reading' ? 'Đọc hiểu' : (data.type === 'grammar' ? 'Ngữ pháp' : (data.type === 'listening' ? 'Nghe hiểu' : 'Từ vựng'));
+                const topicText = data.type !== 'grammar' ? `<p class="font-bold text-base text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-base text-slate-800 capitalize">${typeText}</p>`;
+                const item = document.createElement('div');
+                item.className = 'bg-slate-50 p-3 rounded-lg border border-slate-200';
+                item.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            ${topicText}
+                            <div class="text-xs text-slate-500 mt-1">
+                                <span>Trình độ: ${data.level.toUpperCase()}</span> | <span>${date}</span>
+                            </div>
+                        </div>
+                        <p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p>
+                    </div>
+                    <div class="flex justify-end items-center space-x-2 mt-2 pt-2 border-t border-slate-200">
+                        <button class="review-hist-button bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-result-id="${data.id}">Xem lại</button>
+                        <button class="retry-button bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-type="${data.type}" data-topic="${data.topic || ''}" data-level="${data.level}">Làm lại</button>
+                    </div>`;
+                historyList.appendChild(item);
+            });
+            
+            document.querySelectorAll('.retry-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const { type, topic, level } = e.target.dataset;
+                    startQuiz({ type, topic, level });
+                });
+            });
+            document.querySelectorAll('.review-hist-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    reviewHistoricQuiz(e.target.dataset.resultId);
+                });
+            });
+        }
 
         function calculateStats(results) {
             let totalCorrect = 0, totalQuestions = 0;
@@ -672,6 +763,7 @@
             });
             return { totalCorrect, totalQuestions, skillStats, topicStats };
         }
+
         function displayHistoryStats(stats) {
             const { totalCorrect, totalQuestions, skillStats, topicStats } = stats;
             const overallRate = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
@@ -682,8 +774,9 @@
             historyDashboard.innerHTML = `
                 <div class="bg-blue-100 p-4 rounded-lg"><div class="text-sm text-blue-600 font-semibold">Tỷ lệ đúng</div><div class="text-3xl font-bold text-blue-800">${overallRate}%</div></div>
                 <div class="bg-green-100 p-4 rounded-lg"><div class="text-sm text-green-600 font-semibold">Kỹ năng tốt nhất</div><div class="text-2xl font-bold text-green-800 capitalize">${typeMap[bestSkill.key] || 'Chưa có'}</div></div>
-                <div class="bg-purple-100 p-4 rounded-lg"><div class="text-sm text-purple-600 font-semibold">Chủ đề tốt nhất</div><div class="text-2xl font-bold text-purple-800 capitalize">${bestTopic.key}</div></div>`;
+                <div class="bg-purple-100 p-4 rounded-lg"><div class="text-sm text-purple-600 font-semibold">Chủ đề tốt nhất</div><div class="text-2xl font-bold text-purple-800 capitalize">${bestTopic.key || 'Chưa có'}</div></div>`;
         }
+
         function generateRecommendations(stats) {
             const { skillStats } = stats;
             const recommendations = [];
@@ -716,55 +809,10 @@
                 recommendationsContainer.appendChild(recButton);
             });
         }
-        function renderHistoryList() {
-            const skill = filterSkill.value;
-            const level = filterLevel.value;
-            const filteredResults = userHistoryCache.filter(res => (skill === 'all' || res.type === skill) && (level === 'all' || res.level === level));
-            if (filteredResults.length === 0) { historyList.innerHTML = '<p class="text-center text-slate-500">Không tìm thấy kết quả phù hợp.</p>'; return; }
-            historyList.innerHTML = '';
-            filteredResults.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(data => {
-                const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleString('vi-VN') : 'N/A';
-                const typeText = data.type === 'reading' ? 'Đọc hiểu' : (data.type === 'grammar' ? 'Ngữ pháp' : (data.type === 'listening' ? 'Nghe hiểu' : 'Từ vựng'));
-                const topicText = data.type !== 'grammar' ? `<p class="font-bold text-base text-slate-800 capitalize">${data.topic} <span class="text-sm font-normal text-indigo-600">(${typeText})</span></p>` : `<p class="font-bold text-base text-slate-800 capitalize">${typeText}</p>`;
-                historyList.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><div class="flex justify-between items-center"><div>${topicText}<div class="text-xs text-slate-500 mt-1"><span>Trình độ: ${data.level.toUpperCase()}</span> | <span>${date}</span></div></div><div class="flex items-center space-x-3"><p class="font-bold text-xl ${data.score / data.totalQuestions >= 0.7 ? 'text-green-600' : 'text-orange-500'}">${data.score}/${data.totalQuestions}</p><button class="retry-button bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-type="${data.type}" data-topic="${data.topic || ''}" data-level="${data.level}">Làm lại</button></div></div></div>`;
-            });
-            document.querySelectorAll('.retry-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const { type, topic, level } = e.target.dataset;
-                    startQuiz({ type, topic, level });
-                });
-            });
-        }
-        async function showHistory() {
-            if (!auth.currentUser) { showError("Bạn cần đăng nhập để xem lịch sử."); return; }
-            showView('history-view');
-            historyList.innerHTML = '<div class="spinner mx-auto"></div>';
-            historyDashboard.innerHTML = '';
-            recommendationsContainer.innerHTML = '';
-            try {
-                // CẬP NHẬT: Luôn tải lịch sử từ subcollection của user
-                const historyCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
-                const q = query(historyCollectionRef);
-                const querySnapshot = await getDocs(q);
-                userHistoryCache = querySnapshot.docs.map(doc => doc.data());
-                
-                if (userHistoryCache.length === 0) { 
-                    historyList.innerHTML = '<p class="text-center text-slate-500">Bạn chưa có lịch sử làm bài nào.</p>'; 
-                    return; 
-                }
-                const stats = calculateStats(userHistoryCache);
-                displayHistoryStats(stats);
-                generateRecommendations(stats);
-                renderHistoryList();
-            } catch (error) {
-                console.error("Lỗi khi tải lịch sử: ", error);
-                historyList.innerHTML = '<p class="text-center text-red-500">Không thể tải lịch sử.</p>';
-            }
-        }
         
+        // --- Notebook Functions ---
         async function saveWordToNotebook(word, definition, example) {
             if (!auth.currentUser) return;
-            // CẬP NHẬT: Đường dẫn đã đúng, không cần thay đổi
             const notebookRef = collection(db, "users", auth.currentUser.uid, "vocabulary");
             try {
                 await addDoc(notebookRef, {
@@ -784,7 +832,6 @@
             notebookList.innerHTML = '<div class="spinner mx-auto"></div>';
 
             try {
-                // CẬP NHẬT: Đường dẫn đã đúng, không cần thay đổi
                 const notebookRef = collection(db, "users", auth.currentUser.uid, "vocabulary");
                 const q = query(notebookRef);
                 const querySnapshot = await getDocs(q);
@@ -814,14 +861,13 @@
                 });
 
                 document.querySelectorAll('.delete-word-btn').forEach(button => {
-                    button.addEventListener('click', async (e) => {
-                        const wordId = e.target.dataset.id;
-                        // CẬP NHẬT: Sử dụng modal thay cho confirm()
-                        if (window.confirm('Bạn có chắc muốn xóa từ này khỏi sổ tay?')) {
+                    button.addEventListener('click', (e) => {
+                        const wordId = e.currentTarget.dataset.id;
+                        showConfirmModal('Bạn có chắc muốn xóa từ này khỏi sổ tay?', async () => {
                             const wordDocRef = doc(db, "users", auth.currentUser.uid, "vocabulary", wordId);
                             await deleteDoc(wordDocRef);
-                            e.target.closest('.bg-teal-50').remove();
-                        }
+                            e.currentTarget.closest('.bg-teal-50').remove();
+                        });
                     });
                 });
 
@@ -831,6 +877,56 @@
             }
         }
 
+        // --- Audio Functions ---
+        function playSpeech(text, startIndex = 0) {
+            if (synth.speaking) { synth.cancel(); }
+            isPausedByUser = false;
+            const utterance = new SpeechSynthesisUtterance(text.substring(startIndex));
+            const voices = synth.getVoices();
+            utterance.voice = voices.find(voice => voice.lang.startsWith('en-')) || voices[0];
+            utterance.rate = 0.9;
+            const words = text.split(/(\s+)/);
+            const wordElements = words.map(word => { const span = document.createElement('span'); span.textContent = word; return span; });
+            transcriptContainer.innerHTML = '';
+            wordElements.forEach(el => transcriptContainer.appendChild(el));
+            let charCounter = 0;
+            const wordBoundaries = words.map(word => { const start = charCounter; charCounter += word.length; return { word, start, end: charCounter }; });
+            utterance.onboundary = (event) => {
+                lastSpokenCharIndex = startIndex + event.charIndex;
+                wordElements.forEach(el => el.classList.remove('highlight-word'));
+                for(let i = 0; i < wordBoundaries.length; i++) {
+                    if (lastSpokenCharIndex >= wordBoundaries[i].start && lastSpokenCharIndex < wordBoundaries[i].end) {
+                        wordElements[i].classList.add('highlight-word');
+                        break;
+                    }
+                }
+            };
+            utterance.onstart = () => { audioState = 'playing'; playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); audioStatus.textContent = "Đang phát..."; };
+            utterance.onend = () => {
+                if (!isPausedByUser) {
+                    lastSpokenCharIndex = 0;
+                    audioState = 'idle';
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                    audioStatus.textContent = "Nghe lại";
+                    Array.from(optionsContainer.children).forEach(button => { button.disabled = false; button.classList.remove('opacity-50', 'cursor-not-allowed'); });
+                    wordElements.forEach(el => el.classList.remove('highlight-word'));
+                }
+            };
+            utterance.onerror = (e) => { audioState = 'idle'; audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
+            synth.speak(utterance);
+        }
+
+        function setupAudioPlayer() {
+            audioState = 'idle';
+            lastSpokenCharIndex = 0;
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+            audioStatus.textContent = "Nhấn để nghe";
+            playAudioBtn.disabled = false;
+        }
+        
+        // --- Event Listeners & Setup ---
         function handleQuizTypeChange() {
             const selectedType = quizTypeSelect.value;
             const isVocab = selectedType === 'vocabulary';
@@ -845,7 +941,8 @@
                 topicContainer.style.overflow = 'hidden'; topicContainer.style.marginTop = '0';
             } else {
                 topicContainer.style.maxHeight = '100px'; topicContainer.style.opacity = '1';
-                topicContainer.style.overflow = 'visible'; topicContainer.style.marginTop = '1.5rem';
+                topicContainer.style.overflow = 'visible';
+                topicContainer.style.marginTop = '1.5rem';
             }
         }
 
@@ -886,8 +983,19 @@
             showTranscriptBtn.textContent = isHidden ? 'Hiện lời thoại' : 'Ẩn lời thoại';
         });
 
-        reviewAnswersButton.addEventListener('click', showReviewPage);
-        backToResultButton.addEventListener('click', () => showView('result-view'));
+        reviewAnswersButton.addEventListener('click', () => {
+            const context = {
+                passage: quizData.raw.passage || null,
+                script: quizData.raw.script || null
+            };
+            showReviewPage(sessionResults, context, 'result-view');
+        });
+        
+        backToPreviousViewButton.addEventListener('click', () => showView(reviewCameFrom));
+
+        // Initial setup
+        handleQuizTypeChange();
+
     </script>
 </body>
 </html>
