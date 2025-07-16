@@ -99,8 +99,7 @@
                 <div id="vocabModeContainer" class="vocab-mode-container">
                     <label for="vocabModeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chế độ luyện tập:</label>
                     <select id="vocabModeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
-                        <option value="random" selected>Luyện tập Ngẫu nhiên</option>
-                        <option value="multiple_choice">Chỉ luyện Trắc nghiệm</option>
+                        <option value="multiple_choice" selected>Chỉ luyện Trắc nghiệm</option>
                         <option value="fill_in_the_blank">Chỉ luyện Điền vào chỗ trống</option>
                         <option value="word_formation">Chỉ luyện Dạng của từ</option>
                         <option value="word_scramble">Chỉ luyện Sắp xếp chữ cái</option>
@@ -257,12 +256,12 @@
 
     <!-- Modal Từ vựng liên quan -->
     <div id="vocabModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
+        <div class="modal-content !p-0">
+            <div class="flex justify-between items-center p-6 border-b border-slate-200">
                 <h3 class="text-xl font-bold text-slate-800">Từ vựng liên quan</h3>
-                <button id="closeVocabModal" class="text-2xl font-bold hover:text-red-500">&times;</button>
+                <button id="closeVocabModal" class="text-2xl font-bold text-slate-400 hover:text-red-500">&times;</button>
             </div>
-            <div id="vocabList" class="space-y-3 max-h-80 overflow-y-auto">
+            <div id="vocabList" class="space-y-0 max-h-80 overflow-y-auto p-6">
                 <!-- Danh sách từ vựng sẽ được thêm vào đây -->
             </div>
         </div>
@@ -470,7 +469,7 @@
         function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getFillInTheBlankPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'fill-in-the-blank' vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with the target word replaced by "___". Also provide the correct word in the "answer" field. The "answer" MUST be a single word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "fill_in_the_blank", "question": "The government plans to ___ a new high-speed railway.", "answer": "construct", "explanation": "Construct có nghĩa là 'xây dựng', phù hợp với ngữ cảnh của câu." } ]\n\`\`\``; }
         function getWordFormationPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'word-formation' questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with a blank and a base word in parentheses. The user must type the correct form of the base word. The "answer" MUST be the single, correctly formed word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "word_formation", "question": "Her ___ to the team was a huge benefit. (contribute)", "answer": "contribution", "explanation": "Cần một danh từ ở đây. 'Contribution' là dạng danh từ của động từ 'contribute'." } ]\n\`\`\``; }
-        function getMixedVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate a mixed set of ${count} vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". The set should include a mix of "multiple_choice", "fill_in_the_blank", "word_formation", "word_scramble", and "matching" types. For each question object, you MUST include a "type" field. - For "multiple_choice": include "options" and "answer" (full text). - For "fill_in_the_blank": the question should contain "___", and the "answer" is the single word to fill it. - For "word_formation": the question should contain a base word in parentheses, and the "answer" is the single, correctly formed word. - For "word_scramble": provide a "clue" (Vietnamese hint) and the "answer" word. - For "matching": provide an array of objects, each with a "word" and "meaning". Provide a brief, helpful explanation IN VIETNAMESE for every question except word_scramble and matching. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects.`; }
+        
         function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (about 100-150 words) and ${count} multiple-choice questions about it. The passage topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. For the "answer" field in each question, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
         function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for an English learner at the ${level} CEFR level. Each question should test a common grammar point (e.g., tenses, prepositions, articles, modals). For the "answer" field, you MUST provide the full text of the correct option, exactly as it appears in the "options" array. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE that clearly explains the grammar rule. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getListeningPrompt(level, topic, count) { return `You are an expert English teacher. Create a listening comprehension quiz. 1. Generate one short, clear monologue or a simple two-person dialogue (about 50-80 words). The topic is "${topic}" and it should be suitable for a ${level} CEFR level learner. 2. Based on the script, generate ${count} multiple-choice questions. 3. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. 4. For the "answer" field in each question, you MUST provide the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "script": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
@@ -493,16 +492,17 @@
                     switch(vocabMode) {
                         case 'fill_in_the_blank': prompt = getFillInTheBlankPrompt(level, topic, count); break;
                         case 'word_formation': prompt = getWordFormationPrompt(level, topic, count); break;
-                        case 'multiple_choice': prompt = getVocabularyPrompt(level, topic, count); break;
                         case 'word_scramble': prompt = getWordScramblePrompt(level, topic, count); break;
                         case 'matching': prompt = getMatchingPrompt(level, topic, count); break; 
                         case 'flashcard': prompt = getFlashcardPrompt(level, topic, count); break;
-                        default: prompt = getMixedVocabularyPrompt(level, topic, count);
+                        case 'multiple_choice':
+                        default: // Default to multiple choice
+                            prompt = getVocabularyPrompt(level, topic, count);
                     }
                 }
-                else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, count);
+                else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, 3);
                 else if (quizType === 'grammar') prompt = getGrammarPrompt(level, count);
-                else prompt = getListeningPrompt(level, topic, count);
+                else prompt = getListeningPrompt(level, topic, 3);
                 
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseQuizJson(result.response.text());
@@ -530,7 +530,7 @@
             const total = questions.length;
             
             const typeMap = { vocabulary: 'Luyện tập Từ vựng', reading: 'Luyện tập Đọc hiểu', grammar: 'Luyện tập Ngữ pháp', listening: 'Luyện tập Nghe hiểu' };
-            const modeMap = { random: 'Chế độ Ngẫu nhiên', multiple_choice: 'Trắc nghiệm', fill_in_the_blank: 'Điền từ', word_formation: 'Dạng của từ', word_scramble: 'Sắp xếp chữ cái', matching: 'Nối từ', flashcard: 'Flashcards' };
+            const modeMap = { multiple_choice: 'Trắc nghiệm', fill_in_the_blank: 'Điền từ', word_formation: 'Dạng của từ', word_scramble: 'Sắp xếp chữ cái', matching: 'Nối từ', flashcard: 'Flashcards' };
             quizTitle.textContent = typeMap[quizData.quizType];
             let subtitleParts = [];
             if (quizData.quizType === 'vocabulary') { subtitleParts.push(modeMap[quizData.vocabMode]); }
@@ -581,7 +581,7 @@
                         <div>
                             <div class="flex items-center justify-center">
                                 <h3 class="text-4xl font-bold">${currentQuestion.word}</h3>
-                                <button class="speak-btn" onclick="event.stopPropagation(); playSpeech('${currentQuestion.word}')">
+                                <button class="speak-btn" onclick="event.stopPropagation(); window.playSpeech('${currentQuestion.word}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 hover:text-sky-800"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                                 </button>
                             </div>
@@ -615,6 +615,11 @@
                     meaningsCol.className = 'space-y-3';
 
                     const pairs = currentQuestion.pairs;
+                     if (!Array.isArray(pairs)) {
+                        console.error("Invalid matching question format: 'pairs' is not an array.", currentQuestion);
+                        showError("Đã xảy ra lỗi khi hiển thị câu hỏi nối từ. Dữ liệu không hợp lệ.");
+                        return;
+                    }
                     const shuffledMeanings = [...pairs].sort(() => Math.random() - 0.5);
                     
                     matchingState.correctPairs = 0; // Reset counter
@@ -876,11 +881,11 @@
                     await updateUserStreak(auth.currentUser.uid);
                     try {
                         const resultsCollectionRef = collection(db, "users", auth.currentUser.uid, "quizResults");
+                        
+                        // FIX: Build the result object conditionally to avoid undefined fields.
                         const newResult = { 
-                            topic: quizData.topic, 
                             level: quizData.level, 
                             type: quizData.quizType, 
-                            vocabMode: quizData.vocabMode, 
                             score: score, 
                             totalQuestions: total, 
                             createdAt: serverTimestamp(),
@@ -890,9 +895,21 @@
                                 script: quizData.raw.script || null
                             }
                         };
+
+                        if (quizData.quizType !== 'grammar') {
+                            newResult.topic = quizData.topic;
+                        }
+
+                        if (quizData.quizType === 'vocabulary') {
+                            newResult.vocabMode = quizData.vocabMode;
+                        }
+
                         await addDoc(resultsCollectionRef, newResult);
                         userHistoryCache = []; 
-                    } catch (e) { console.error("Lỗi khi lưu kết quả: ", e); }
+                    } catch (e) { 
+                        console.error("Lỗi khi lưu kết quả: ", e); 
+                        console.error("Data that caused error:", newResult);
+                    }
                 }
                 finalScore.textContent = `${score} / ${total}`;
                 const percentage = (score / total) * 100;
@@ -1211,6 +1228,8 @@
             utterance.onerror = (e) => { audioState = 'idle'; audioStatus.textContent = "Lỗi phát âm thanh"; console.error("SpeechSynthesis Error:", e); };
             synth.speak(utterance);
         }
+        // FIX: Expose playSpeech to the global scope so inline onclick handlers can call it.
+        window.playSpeech = playSpeech;
 
         function setupAudioPlayer() {
             audioState = 'idle';
@@ -1225,37 +1244,70 @@
         async function saveQuizToLibrary(quizDataToSave) {
             if (!auth.currentUser) return;
             const libraryRef = collection(db, "quizLibrary");
+
+            const extractVocabulary = (questions) => {
+                const vocabulary = [];
+                if (!Array.isArray(questions)) return vocabulary;
+
+                questions.forEach(q => {
+                    if (q.type === 'matching' && Array.isArray(q.pairs)) {
+                        q.pairs.forEach(pair => vocabulary.push({
+                            word: pair.word,
+                            meaning: pair.meaning,
+                            ipa: ''
+                        }));
+                    } else if (q.type === 'flashcard' && q.word) {
+                        vocabulary.push({
+                            word: q.word,
+                            meaning: q.meaning,
+                            ipa: q.ipa || ''
+                        });
+                    } else if (q.answer) { // For multiple_choice, fill_in_the_blank, reading, listening etc.
+                        vocabulary.push({
+                            word: q.answer,
+                            meaning: q.explanation || q.clue || 'Xem giải thích trong bài.',
+                            ipa: q.ipa || ''
+                        });
+                    }
+                });
+                return vocabulary;
+            };
+
             try {
-                const docRef = await addDoc(libraryRef, {
+                const quizContent = quizDataToSave.raw;
+                const relatedVocabulary = extractVocabulary(
+                    Array.isArray(quizContent) ? quizContent : (quizContent?.questions || [])
+                );
+
+                // Construct the base object with guaranteed fields.
+                const dataToSave = {
                     creatorId: auth.currentUser.uid,
-                    topic: quizDataToSave.topic,
                     level: quizDataToSave.level,
                     quizType: quizDataToSave.quizType,
-                    vocabMode: quizDataToSave.vocabMode,
                     count: quizDataToSave.count,
-                    quizContent: quizDataToSave.raw,
-                    createdAt: serverTimestamp()
-                });
-                // Now, extract and save vocabulary for the new library entry
-                extractAndSaveVocabulary(quizDataToSave.raw, docRef.id);
+                    quizContent: quizContent || {},
+                    createdAt: serverTimestamp(),
+                    relatedVocabulary: relatedVocabulary
+                };
+
+                // Conditionally add fields to avoid 'undefined' values.
+                // Topic is not relevant for grammar quizzes.
+                if (quizDataToSave.quizType !== 'grammar') {
+                    dataToSave.topic = quizDataToSave.topic;
+                }
+
+                // VocabMode is only relevant for vocabulary quizzes.
+                if (quizDataToSave.quizType === 'vocabulary') {
+                    dataToSave.vocabMode = quizDataToSave.vocabMode;
+                }
+
+                await addDoc(libraryRef, dataToSave);
+
             } catch (error) {
                 console.error("Error saving quiz to library:", error);
-            }
-        }
-
-        async function extractAndSaveVocabulary(quizContent, docId) {
-            const prompt = `From the following quiz JSON content, extract a list of 5 to 7 key vocabulary words. For each word, provide the English word, its Vietnamese meaning, and its IPA transcription. Format the output as a JSON array of objects. JSON: ${JSON.stringify(quizContent)}`;
-            try {
-                const result = await model.generateContent(prompt);
-                const parsedVocab = extractAndParseQuizJson(result.response.text());
-                if (parsedVocab) {
-                    const docRef = doc(db, "quizLibrary", docId);
-                    await updateDoc(docRef, {
-                        relatedVocabulary: parsedVocab
-                    });
+                 if (error.message.includes("invalid data")) {
+                    console.error("Data that caused error:", dataToSave);
                 }
-            } catch (error) {
-                console.error("Error extracting or saving vocabulary:", error);
             }
         }
 
@@ -1279,15 +1331,15 @@
                 return;
             }
             libraryList.innerHTML = '';
-            quizzes.forEach(quiz => {
+            quizzes.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).forEach(quiz => {
                 const date = quiz.createdAt ? new Date(quiz.createdAt.seconds * 1000).toLocaleDateString('vi-VN') : 'N/A';
                 const typeText = quiz.quizType === 'reading' ? 'Đọc hiểu' : (quiz.quizType === 'grammar' ? 'Ngữ pháp' : (quiz.quizType === 'listening' ? 'Nghe hiểu' : 'Từ vựng'));
                 const item = document.createElement('div');
                 item.className = 'bg-slate-50 p-3 rounded-lg border border-slate-200';
                 item.innerHTML = `
-                    <p class="font-bold text-base text-slate-800 capitalize">${quiz.topic} <span class="text-sm font-normal text-amber-600">(${typeText})</span></p>
+                    <p class="font-bold text-base text-slate-800 capitalize">${quiz.topic || 'Ngữ pháp tổng hợp'} <span class="text-sm font-normal text-amber-600">(${typeText})</span></p>
                     <div class="text-xs text-slate-500 mt-1">
-                        <span>Trình độ: ${quiz.level.toUpperCase()}</span> | <span>${quiz.count} câu</span> | <span>Ngày tạo: ${date}</span>
+                        <span>Trình độ: ${quiz.level.toUpperCase()}</span> | <span>${quiz.count || (quiz.quizContent?.questions?.length || quiz.quizContent?.length)} câu</span> | <span>Ngày tạo: ${date}</span>
                     </div>
                     <div class="flex justify-end items-center space-x-2 mt-2 pt-2 border-t border-slate-200">
                         <button class="view-vocab-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-quiz-id="${quiz.id}">Xem từ vựng</button>
@@ -1310,15 +1362,16 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const savedQuiz = docSnap.data();
-                    startQuiz({
-                        type: savedQuiz.quizType,
+                    quizData = {
                         topic: savedQuiz.topic,
                         level: savedQuiz.level,
+                        quizType: savedQuiz.quizType,
+                        vocabMode: savedQuiz.vocabMode,
                         count: savedQuiz.count,
-                        isRetry: true // Flag to prevent re-saving
-                    });
-                    // Directly set quizData.raw from the saved content
-                    quizData.raw = savedQuiz.quizContent;
+                        raw: savedQuiz.quizContent,
+                        isRetry: true
+                    };
+                    sessionResults = [];
                     currentQuestionIndex = 0;
                     score = 0;
                     renderQuiz();
@@ -1333,29 +1386,36 @@
             const docRef = doc(db, "quizLibrary", quizId);
             try {
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists() && docSnap.data().relatedVocabulary) {
+                if (docSnap.exists()) {
                     const vocabData = docSnap.data().relatedVocabulary;
-                    vocabList.innerHTML = '';
-                    vocabData.forEach(v => {
-                        const item = document.createElement('div');
-                        item.className = 'p-2 border-b';
-                        item.innerHTML = `
-                            <div class="flex items-center">
-                                <b class="text-lg text-slate-800">${v.word}</b>
-                                <span class="ml-2 text-slate-500">${v.ipa || ''}</span>
-                                <button class="speak-btn ml-auto" onclick="playSpeech('${v.word}')">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600 hover:text-sky-800"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                                </button>
-                            </div>
-                            <p class="text-slate-600">${v.meaning}</p>
-                        `;
-                        vocabList.appendChild(item);
-                    });
+                    vocabList.innerHTML = ''; // Clear previous content
+
+                    if (vocabData && vocabData.length > 0) {
+                        vocabData.forEach(v => {
+                            if (!v.word || !v.meaning) return; // Skip incomplete entries
+                            const item = document.createElement('div');
+                            item.className = 'p-3 border-b border-slate-200 last:border-b-0';
+                            item.innerHTML = `
+                                <div class="flex items-center">
+                                    <b class="text-lg text-slate-800">${v.word}</b>
+                                    <span class="ml-3 text-slate-500">${v.ipa || ''}</span>
+                                    <button class="speak-btn ml-auto p-1 rounded-full hover:bg-sky-100" onclick="window.playSpeech('${v.word}')">
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-600"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                    </button>
+                                </div>
+                                <p class="text-slate-600">${v.meaning}</p>
+                            `;
+                            vocabList.appendChild(item);
+                        });
+                    } else {
+                        vocabList.innerHTML = '<p class="text-center text-slate-500 p-4">Không có từ vựng nào được lưu cho bài tập này.</p>';
+                    }
                     vocabModal.classList.remove('hidden');
                 } else {
-                    showError("Không có từ vựng liên quan cho bài tập này.");
+                    showError("Không tìm thấy bài tập này trong thư viện.");
                 }
             } catch (error) {
+                console.error("Error loading related vocabulary:", error);
                 showError("Không thể tải danh sách từ vựng.");
             }
         }
