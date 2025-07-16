@@ -6,7 +6,7 @@
     <title>AI English Quiz - Luyện Tập Toàn Diện</title>
     <!-- Tích hợp Tailwind CSS để làm giao diện -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- NEW: Tích hợp Marked.js để render Markdown -->
+    <!-- Tích hợp Marked.js để render Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,7 +77,7 @@
 
         <!-- Màn hình 1: Thiết lập bài kiểm tra -->
         <div id="setup-view" class="view">
-            <div class="flex justify-between items-start mb-8">
+            <div class="flex justify-between items-start mb-6">
                  <div><h1 class="text-3xl font-bold text-sky-600">AI English Quiz</h1><p id="welcomeMessage" class="text-slate-500">Chào mừng trở lại!</p></div>
                  <div class="flex flex-col items-end space-y-2">
                     <div id="streakDisplay" class="flex items-center justify-center bg-orange-100 text-orange-600 font-bold text-sm px-3 py-1 rounded-full">
@@ -92,64 +92,69 @@
                  </div>
             </div>
 
+            <!-- NEW: Quick Start Button -->
+            <button id="quickStartButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2z"></polygon></svg>
+                Luyện tập nhanh
+            </button>
             <button id="showLibraryButton" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3 mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                 Thư viện bài tập
             </button>
             
             <div class="space-y-6">
-                <div>
-                    <label for="quizTypeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn kỹ năng luyện tập:</label>
-                    <select id="quizTypeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
-                        <option value="vocabulary" selected>Từ vựng (Vocabulary)</option>
-                        <option value="reading">Đọc hiểu (Reading)</option>
-                        <option value="grammar">Ngữ pháp (Grammar)</option>
-                        <option value="listening">Nghe hiểu (Listening)</option>
-                        <option value="writing">Luyện Viết (Writing)</option>
-                    </select>
+                <div class="p-4 bg-slate-50 rounded-lg border">
+                    <h3 class="font-bold text-slate-700 mb-3 text-lg">Tùy chỉnh bài luyện tập</h3>
+                    <div>
+                        <label for="quizTypeSelect" class="block text-md font-semibold mb-2 text-slate-700">Chọn kỹ năng:</label>
+                        <select id="quizTypeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                            <option value="vocabulary" selected>Từ vựng (Vocabulary)</option>
+                            <option value="reading">Đọc hiểu (Reading)</option>
+                            <option value="grammar">Ngữ pháp (Grammar)</option>
+                            <option value="listening">Nghe hiểu (Listening)</option>
+                            <option value="writing">Luyện Viết (Writing)</option>
+                        </select>
+                    </div>
+                    <div id="vocabModeContainer" class="vocab-mode-container mt-4">
+                        <label for="vocabModeSelect" class="block text-md font-semibold mb-2 text-slate-700">Chọn chế độ:</label>
+                        <select id="vocabModeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                            <option value="multiple_choice" selected>Trắc nghiệm</option>
+                            <option value="fill_in_the_blank">Điền vào chỗ trống</option>
+                            <option value="word_formation">Dạng của từ</option>
+                            <option value="word_scramble">Sắp xếp chữ cái</option>
+                            <option value="matching">Nối từ</option>
+                            <option value="flashcard">Flashcards</option>
+                        </select>
+                    </div>
+                    <div id="topicContainer" class="topic-container mt-4">
+                        <label for="topicSelect" class="block text-md font-semibold mb-2 text-slate-700">Chọn chủ đề:</label>
+                        <select id="topicSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                            <option value="Travel">Du lịch</option>
+                            <option value="Technology" selected>Công nghệ</option>
+                            <option value="Food & Cooking">Ẩm thực</option>
+                            <option value="Health & Fitness">Sức khỏe</option>
+                            <option value="Work & Business">Công việc</option>
+                            <option value="Movies & Entertainment">Giải trí</option>
+                            <option value="Sports">Thể thao</option>
+                        </select>
+                    </div>
+                    <div class="mt-4"><label for="levelSelect" class="block text-md font-semibold mb-2 text-slate-700">Chọn trình độ:</label><select id="levelSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"><option value="A2">A2</option><option value="B1" selected>B1</option><option value="B2">B2</option><option value="C1">C1</option></select></div>
+                    <div id="questionCountContainer" class="mt-4">
+                        <label for="questionCountSelect" class="block text-md font-semibold mb-2 text-slate-700">Số lượng câu hỏi:</label>
+                        <select id="questionCountSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
+                            <option value="5" selected>5 câu</option>
+                            <option value="10">10 câu</option>
+                            <option value="15">15 câu</option>
+                        </select>
+                    </div>
+                    <button id="startQuizButton" class="mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-3">Bắt đầu</button>
                 </div>
-                <div id="vocabModeContainer" class="vocab-mode-container">
-                    <label for="vocabModeSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chế độ luyện tập:</label>
-                    <select id="vocabModeSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
-                        <option value="multiple_choice" selected>Chỉ luyện Trắc nghiệm</option>
-                        <option value="fill_in_the_blank">Chỉ luyện Điền vào chỗ trống</option>
-                        <option value="word_formation">Chỉ luyện Dạng của từ</option>
-                        <option value="word_scramble">Chỉ luyện Sắp xếp chữ cái</option>
-                        <option value="matching">Chỉ luyện Nối từ</option>
-                        <option value="flashcard">Chỉ luyện Flashcards</option>
-                    </select>
-                </div>
-                <div id="topicContainer" class="topic-container">
-                    <label for="topicSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn chủ đề bạn yêu thích:</label>
-                    <select id="topicSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
-                        <option value="Travel">Du lịch (Travel)</option>
-                        <option value="Technology" selected>Công nghệ (Technology)</option>
-                        <option value="Food & Cooking">Ẩm thực & Nấu ăn (Food & Cooking)</option>
-                        <option value="Health & Fitness">Sức khỏe & Thể hình (Health & Fitness)</option>
-                        <option value="Work & Business">Công việc & Kinh doanh (Work & Business)</option>
-                        <option value="Movies & Entertainment">Phim ảnh & Giải trí (Movies & Entertainment)</option>
-                        <option value="Music">Âm nhạc (Music)</option>
-                        <option value="Sports">Thể thao (Sports)</option>
-                        <option value="Education">Giáo dục (Education)</option>
-                        <option value="Nature & Environment">Thiên nhiên & Môi trường (Nature & Environment)</option>
-                        <option value="History">Lịch sử (History)</option>
-                        <option value="Science">Khoa học (Science)</option>
-                        <option value="Fashion & Shopping">Thời trang & Mua sắm (Fashion & Shopping)</option>
-                        <option value="Daily Life">Cuộc sống hàng ngày (Daily Life)</option>
-                        <option value="Relationships">Các mối quan hệ (Relationships)</option>
-                    </select>
-                </div>
-                <div><label for="levelSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn trình độ của bạn:</label><select id="levelSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"><option value="A2">A2 (Beginner)</option><option value="B1" selected>B1 (Intermediate)</option><option value="B2">B2 (Upper-Intermediate)</option><option value="C1">C1 (Advanced)</option></select></div>
-                <div id="questionCountContainer">
-                    <label for="questionCountSelect" class="block text-lg font-semibold mb-2 text-slate-700">Chọn số lượng câu hỏi:</label>
-                    <select id="questionCountSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white">
-                        <option value="5" selected>5 câu (Nhanh)</option>
-                        <option value="10">10 câu (Tiêu chuẩn)</option>
-                        <option value="15">15 câu (Chuyên sâu)</option>
-                    </select>
+                <!-- NEW: Auto-advance setting -->
+                <div class="mt-6 flex items-center justify-center">
+                    <input type="checkbox" id="autoAdvanceCheckbox" class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                    <label for="autoAdvanceCheckbox" class="ml-2 block text-sm text-gray-900">Tự động chuyển câu sau khi trả lời</label>
                 </div>
             </div>
-            <button id="startQuizButton" class="mt-10 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>Bắt đầu làm bài</button>
         </div>
         
         <!-- Màn hình Thư viện bài tập -->
@@ -296,7 +301,7 @@
         </div>
     </div>
 
-    <!-- NEW: Modal Củng cố Kiến thức -->
+    <!-- Modal Củng cố Kiến thức -->
     <div id="reinforceModal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="flex justify-between items-center pb-4 border-b mb-4">
@@ -338,8 +343,10 @@
         // DOM Elements
         const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountContainer = document.getElementById('questionCountContainer'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
         const backToSetupFromWriting = document.getElementById('backToSetupFromWriting'), writingTopic = document.getElementById('writingTopic'), writingInput = document.getElementById('writingInput'), wordCount = document.getElementById('wordCount'), getFeedbackButton = document.getElementById('getFeedbackButton'), writingFeedbackContainer = document.getElementById('writingFeedbackContainer');
-        // NEW: Reinforce Modal DOM Elements
         const reinforceModal = document.getElementById('reinforceModal'), reinforceTitle = document.getElementById('reinforceTitle'), reinforceContent = document.getElementById('reinforceContent'), closeReinforceModal = document.getElementById('closeReinforceModal');
+        // NEW DOM Elements for UX Improvements
+        const quickStartButton = document.getElementById('quickStartButton');
+        const autoAdvanceCheckbox = document.getElementById('autoAdvanceCheckbox');
 
 
         // App State
@@ -353,6 +360,7 @@
             selectedWordEl: null,
             correctPairs: 0
         };
+        let autoAdvanceTimer = null;
         
         // Audio State
         const synth = window.speechSynthesis;
@@ -363,6 +371,7 @@
         // --- Core Functions ---
         function showView(viewId) { 
             if (synth.speaking) { synth.cancel(); }
+            clearTimeout(autoAdvanceTimer); // Clear timer when changing views
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
             document.getElementById(viewId).classList.add('active'); 
         }
@@ -557,7 +566,6 @@
             `;
         }
         
-        // NEW: Reinforcement Prompt
         function getReinforcementPrompt(question, userAnswer) {
             const level = quizData.level;
             const questionText = question.question || question.clue;
@@ -606,6 +614,17 @@
             } else {
                 await startQuiz();
             }
+        }
+        
+        async function quickStartPractice() {
+            const quickStartSettings = {
+                type: 'vocabulary', // Default to vocabulary for quick start
+                topic: 'Daily Life',
+                level: levelSelect.value, // Use the user's current level setting
+                count: 5,
+                isRetry: false
+            };
+            await startQuiz(quickStartSettings);
         }
 
         async function startWritingPractice() {
@@ -1013,8 +1032,13 @@
 
 
         function handleAnswer(selectedOption, isFlashcard = false) {
+            clearTimeout(autoAdvanceTimer);
             if (isFlashcard) {
-                nextQuestionButton.classList.remove('hidden');
+                if (autoAdvanceCheckbox.checked) {
+                    autoAdvanceTimer = setTimeout(moveToNextQuestion, 3000);
+                } else {
+                    nextQuestionButton.classList.remove('hidden');
+                }
                 return;
             }
 
@@ -1051,12 +1075,9 @@
                     feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-red-100 text-red-800';
                     const displayAnswer = `Đáp án đúng là <b>"${currentQuestion.answer}"</b>.`;
                     let feedbackHTML = `<b class="font-bold">Chưa đúng.</b> ${displayAnswer}`;
-                    if(currentQuestion.explanation) {
-                        feedbackHTML += `<p>${currentQuestion.explanation}</p>`;
-                    }
+                    if(currentQuestion.explanation) { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
                     feedbackContainer.innerHTML = feedbackHTML;
 
-                    // NEW: Add Reinforcement Button on incorrect answer
                     const reinforceBtn = document.createElement('button');
                     reinforceBtn.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
@@ -1079,9 +1100,7 @@
                         saveBtn.title = `Lưu từ "${item.word || item.answer}" vào sổ tay`;
                         saveBtn.onclick = (e) => {
                             saveWordToNotebook(item.word || item.answer, item.meaning || item.definition, item.example);
-                            e.target.classList.add('saved');
-                            e.target.innerHTML = '✅';
-                            e.target.onclick = null;
+                            e.target.classList.add('saved'); e.target.innerHTML = '✅'; e.target.onclick = null;
                         };
                         feedbackContainer.firstChild.appendChild(saveBtn);
                     });
@@ -1089,7 +1108,12 @@
             }
 
             scoreEl.textContent = `Điểm: ${score}`;
-            nextQuestionButton.classList.remove('hidden');
+            
+            if (autoAdvanceCheckbox.checked) {
+                autoAdvanceTimer = setTimeout(moveToNextQuestion, 3000);
+            } else {
+                nextQuestionButton.classList.remove('hidden');
+            }
 
             sessionResults.push({
                 question: currentQuestion,
@@ -1098,7 +1122,6 @@
             });
         }
 
-        // --- NEW: Reinforcement Functions ---
         async function requestReinforcement(question, userAnswer) {
             reinforceModal.classList.remove('hidden');
             reinforceContent.innerHTML = '<div class="spinner mx-auto"></div>';
@@ -1652,6 +1675,7 @@
         registerButton.addEventListener('click', () => handleAuthAction('register'));
         logoutButton.addEventListener('click', handleLogout);
         startQuizButton.addEventListener('click', startPractice);
+        quickStartButton.addEventListener('click', quickStartPractice);
         playAgainButton.addEventListener('click', () => showView('setup-view'));
         backToSetupButton.addEventListener('click', () => showView('setup-view'));
         showHistoryButton.addEventListener('click', showHistory);
@@ -1699,7 +1723,6 @@
             wordCount.textContent = `${count} từ`;
         });
 
-        // NEW: Reinforce Modal Listeners
         closeReinforceModal.addEventListener('click', () => reinforceModal.classList.add('hidden'));
         reinforceModal.addEventListener('click', (e) => { if (e.target === reinforceModal) { reinforceModal.classList.add('hidden'); } });
 
