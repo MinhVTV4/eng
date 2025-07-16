@@ -92,7 +92,6 @@
                  </div>
             </div>
 
-            <!-- NEW: Quick Start Button -->
             <button id="quickStartButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2z"></polygon></svg>
                 Luyện tập nhanh
@@ -149,7 +148,6 @@
                     </div>
                     <button id="startQuizButton" class="mt-6 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-3">Bắt đầu</button>
                 </div>
-                <!-- NEW: Auto-advance setting -->
                 <div class="mt-6 flex items-center justify-center">
                     <input type="checkbox" id="autoAdvanceCheckbox" class="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
                     <label for="autoAdvanceCheckbox" class="ml-2 block text-sm text-gray-900">Tự động chuyển câu sau khi trả lời</label>
@@ -321,9 +319,8 @@
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
-        // IMPORTANT: Replace with your actual Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E", // Replace with your key
+            apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
             authDomain: "engai-374f7.firebaseapp.com",
             projectId: "engai-374f7",
             storageBucket: "engai-374f7.firebasestorage.app",
@@ -331,20 +328,23 @@
             appId: "1:793685525357:web:bf74f624247165fd53d064"
         };
 
-        let app, auth, model, db;
+        let app, auth, db, model, fastModel;
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
+            // --- IMPLEMENTING DUAL MODEL STRATEGY ---
+            // Main model for high-quality, complex tasks
             model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+            // Fast model for quick, secondary tasks
+            fastModel = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
         } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         // DOM Elements
         const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountContainer = document.getElementById('questionCountContainer'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
         const backToSetupFromWriting = document.getElementById('backToSetupFromWriting'), writingTopic = document.getElementById('writingTopic'), writingInput = document.getElementById('writingInput'), wordCount = document.getElementById('wordCount'), getFeedbackButton = document.getElementById('getFeedbackButton'), writingFeedbackContainer = document.getElementById('writingFeedbackContainer');
         const reinforceModal = document.getElementById('reinforceModal'), reinforceTitle = document.getElementById('reinforceTitle'), reinforceContent = document.getElementById('reinforceContent'), closeReinforceModal = document.getElementById('closeReinforceModal');
-        // NEW DOM Elements for UX Improvements
         const quickStartButton = document.getElementById('quickStartButton');
         const autoAdvanceCheckbox = document.getElementById('autoAdvanceCheckbox');
 
@@ -371,7 +371,7 @@
         // --- Core Functions ---
         function showView(viewId) { 
             if (synth.speaking) { synth.cancel(); }
-            clearTimeout(autoAdvanceTimer); // Clear timer when changing views
+            clearTimeout(autoAdvanceTimer);
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); 
             document.getElementById(viewId).classList.add('active'); 
         }
@@ -501,7 +501,8 @@
         async function getTranslation(text) {
             try {
                 const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
-                const result = await model.generateContent(prompt);
+                // Use fastModel for translation
+                const result = await fastModel.generateContent(prompt);
                 return result.response.text();
             } catch (error) { console.error("Translation error:", error); return "Không thể dịch được."; }
         }
@@ -618,9 +619,9 @@
         
         async function quickStartPractice() {
             const quickStartSettings = {
-                type: 'vocabulary', // Default to vocabulary for quick start
+                type: 'vocabulary',
                 topic: 'Daily Life',
-                level: levelSelect.value, // Use the user's current level setting
+                level: levelSelect.value,
                 count: 5,
                 isRetry: false
             };
@@ -636,6 +637,7 @@
             loadingTopic.textContent = `chủ đề Luyện Viết`;
             try {
                 const prompt = getWritingTopicPrompt(level, topic);
+                // Use main model for creative task
                 const result = await model.generateContent(prompt);
                 const topicText = result.response.text();
 
@@ -671,6 +673,7 @@
 
             try {
                 const prompt = getWritingFeedbackPrompt(quizData.level, quizData.topic, userText);
+                // Use main model for complex analysis
                 const result = await model.generateContent(prompt);
                 const feedbackData = extractAndParseJson(result.response.text());
 
@@ -763,6 +766,7 @@
                 else if (quizType === 'grammar') prompt = getGrammarPrompt(level, count);
                 else if (quizType === 'listening') prompt = getListeningPrompt(level, topic, 3);
                 
+                // Use main model for quiz generation
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseJson(result.response.text());
                 if (!parsedData) throw new Error("AI did not return valid JSON data.");
@@ -1129,6 +1133,7 @@
 
             try {
                 const prompt = getReinforcementPrompt(question, userAnswer);
+                // Use main model for in-depth lesson
                 const result = await model.generateContent(prompt);
                 const lessonData = extractAndParseJson(result.response.text());
 
@@ -1412,7 +1417,7 @@
                 <div class="bg-purple-100 p-4 rounded-lg"><div class="text-sm text-purple-600 font-semibold">Chủ đề tốt nhất</div><div class="text-2xl font-bold text-purple-800 capitalize">${bestTopic.key || 'Chưa có'}</div></div>`;
         }
 
-        function generateRecommendations(stats) {
+        async function generateRecommendations(stats) {
             const { skillStats } = stats;
             const recommendations = [];
             const findWorst = (s) => Object.entries(s).filter(([, v]) => v.t > 0).reduce((w, [k, v]) => (v.c / v.t < w.rate ? { key: k, rate: v.c / v.t } : w), { key: 'N/A', rate: 2 });
