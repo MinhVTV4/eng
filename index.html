@@ -6,6 +6,8 @@
     <title>AI English Quiz - Luyện Tập Toàn Diện</title>
     <!-- Tích hợp Tailwind CSS để làm giao diện -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- NEW: Tích hợp Marked.js để render Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,11 +19,11 @@
         .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0ea5e9; animation: spin 1s ease-in-out infinite; }
         .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList, #libraryList, #writingFeedbackContainer { max-height: 400px; overflow-y: auto; }
+        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList, #libraryList, #writingFeedbackContainer, #reinforceContent { max-height: 50vh; overflow-y: auto; }
         .topic-container, .vocab-mode-container { transition: all 0.3s ease-in-out; overflow: hidden; }
-        #translationModal.hidden, #confirmModal.hidden, #vocabModal.hidden { display: none; }
+        #translationModal.hidden, #confirmModal.hidden, #vocabModal.hidden, #reinforceModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 1rem; max-width: 90%; width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
         .translate-icon { cursor: pointer; color: #3b82f6; margin-left: 8px; font-size: 1.25rem; display: inline-block; vertical-align: middle; }
         .info-icon { cursor: pointer; background-color: #dbeafe; color: #3b82f6; border-radius: 50%; width: 22px; height: 22px; font-style: normal; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-left: auto; }
         .highlight-word { background-color: #facc15; color: #1f2937; padding: 2px 0; border-radius: 3px; }
@@ -46,6 +48,12 @@
         /* Writing View Styles */
         #writingFeedbackContainer del { background-color: #fee2e2; text-decoration: line-through; color: #991b1b; padding: 2px; border-radius: 3px; }
         #writingFeedbackContainer ins { background-color: #dcfce7; text-decoration: none; color: #166534; padding: 2px; border-radius: 3px; }
+        
+        /* Styles for Marked.js output */
+        .prose p { margin-bottom: 0.75rem; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .prose li { margin-bottom: 0.25rem; }
+        .prose strong { font-weight: 600; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -97,7 +105,6 @@
                         <option value="reading">Đọc hiểu (Reading)</option>
                         <option value="grammar">Ngữ pháp (Grammar)</option>
                         <option value="listening">Nghe hiểu (Listening)</option>
-                        <!-- NEW: Writing Option -->
                         <option value="writing">Luyện Viết (Writing)</option>
                     </select>
                 </div>
@@ -203,7 +210,7 @@
             <button id="nextQuestionButton" class="hidden mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition">Tiếp tục</button>
         </div>
 
-        <!-- NEW: Màn hình Luyện Viết -->
+        <!-- Màn hình Luyện Viết -->
         <div id="writing-view" class="view">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-3xl font-bold text-cyan-600">Luyện Viết</h2>
@@ -224,9 +231,7 @@
                     <div class="spinner btn-spinner hidden"></div>
                 </button>
             </div>
-            <div id="writingFeedbackContainer" class="mt-8 space-y-6 hidden">
-                <!-- Phản hồi của AI sẽ được hiển thị ở đây -->
-            </div>
+            <div id="writingFeedbackContainer" class="mt-8 space-y-6 hidden"></div>
         </div>
 
 
@@ -291,6 +296,19 @@
         </div>
     </div>
 
+    <!-- NEW: Modal Củng cố Kiến thức -->
+    <div id="reinforceModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-4 border-b mb-4">
+                <h3 id="reinforceTitle" class="text-2xl font-bold text-fuchsia-600">Bài học từ AI</h3>
+                <button id="closeReinforceModal" class="text-2xl font-bold text-slate-400 hover:text-red-500">&times;</button>
+            </div>
+            <div id="reinforceContent" class="space-y-4">
+                <div class="spinner mx-auto"></div>
+            </div>
+        </div>
+    </div>
+
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
@@ -319,8 +337,9 @@
 
         // DOM Elements
         const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountContainer = document.getElementById('questionCountContainer'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
-        // NEW: Writing View DOM Elements
         const backToSetupFromWriting = document.getElementById('backToSetupFromWriting'), writingTopic = document.getElementById('writingTopic'), writingInput = document.getElementById('writingInput'), wordCount = document.getElementById('wordCount'), getFeedbackButton = document.getElementById('getFeedbackButton'), writingFeedbackContainer = document.getElementById('writingFeedbackContainer');
+        // NEW: Reinforce Modal DOM Elements
+        const reinforceModal = document.getElementById('reinforceModal'), reinforceTitle = document.getElementById('reinforceTitle'), reinforceContent = document.getElementById('reinforceContent'), closeReinforceModal = document.getElementById('closeReinforceModal');
 
 
         // App State
@@ -494,7 +513,6 @@
         function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (100-150 words) and ${count} multiple-choice questions. The topic is "${topic}" and for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. The "answer" field MUST be the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
         function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for a ${level} CEFR level learner. Each question should test a common grammar point. For the "answer" field, you MUST provide the full text of the correct option. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getListeningPrompt(level, topic, count) { return `You are an expert English teacher. Create a listening comprehension quiz. 1. Generate one short monologue or dialogue (50-80 words). The topic is "${topic}" and for a ${level} CEFR level learner. 2. Based on the script, generate ${count} multiple-choice questions. 3. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. The "answer" field MUST be the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "script": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
-        // NEW: Writing Prompts
         function getWritingTopicPrompt(level, topic) { return `You are an English teacher. Generate a single, engaging writing topic for an English learner at the ${level} CEFR level. The topic should be related to "${topic}". The topic should be a question or a statement to respond to. Provide only the topic text, without any extra labels or quotation marks. Example: "Describe your favorite kind of technology and explain why you like it."`; }
         function getWritingFeedbackPrompt(level, topic, userText) {
             return `You are an expert English writing evaluator. A student at the ${level} CEFR level has written the following text about the topic "${topic}".
@@ -534,6 +552,46 @@
                   "explanation": "Cấu trúc đúng là 'use something for something'. 'Thing' cần ở dạng số nhiều 'things' vì đi với 'many'."
                 }
               ]
+            }
+            \`\`\`
+            `;
+        }
+        
+        // NEW: Reinforcement Prompt
+        function getReinforcementPrompt(question, userAnswer) {
+            const level = quizData.level;
+            const questionText = question.question || question.clue;
+            const options = question.options ? JSON.stringify(question.options) : 'N/A';
+            
+            return `You are an expert and friendly English tutor AI. A student has made a mistake on a quiz. Your task is to provide a comprehensive, easy-to-understand lesson to help them master the concept they got wrong.
+
+            The student is at the ${level} CEFR level.
+
+            Here is the quiz question:
+            - Question: "${questionText}"
+            - Options (if any): ${options}
+            - Correct Answer: "${question.answer}"
+            - Student's Incorrect Answer: "${userAnswer}"
+
+            Please generate a lesson in Vietnamese. You MUST wrap your entire response in a 'json' markdown code block. The JSON object must have the following structure:
+            1. "conceptTitle": A short, clear title for the lesson (e.g., "Cách dùng thì Hiện tại Hoàn thành", "Sự khác biệt giữa 'affect' và 'effect'").
+            2. "mistakeAnalysis": A friendly explanation of why the student's answer was incorrect in this specific context.
+            3. "conceptExplanation": A detailed but easy-to-understand explanation of the core grammar rule or vocabulary concept. Use bullet points or short paragraphs with Markdown formatting (like **bold** and *italics*).
+            4. "examples": An array of at least 3 distinct objects, each with an "en" (English sentence) and "vi" (Vietnamese translation) field, demonstrating the correct usage.
+            5. "practiceTip": A final, encouraging tip for the student to remember and practice this concept.
+
+            Example of the required JSON output:
+            \`\`\`json
+            {
+              "conceptTitle": "Phân biệt 'Much' và 'Many'",
+              "mistakeAnalysis": "Bạn đã chọn 'much' nhưng 'friends' là một danh từ đếm được ở dạng số nhiều. Trong trường hợp này, chúng ta phải dùng 'many'.",
+              "conceptExplanation": "'Many' và 'much' đều có nghĩa là 'nhiều', nhưng cách dùng khác nhau:\\n- **Many**: Dùng với danh từ đếm được (countable nouns) ở dạng số nhiều. Ví dụ: books, people, cars.\\n- **Much**: Dùng với danh từ không đếm được (uncountable nouns). Ví dụ: water, time, information, money.",
+              "examples": [
+                { "en": "She has many books on her shelf.", "vi": "Cô ấy có nhiều sách trên kệ." },
+                { "en": "I don't have much time to finish the project.", "vi": "Tôi không có nhiều thời gian để hoàn thành dự án." },
+                { "en": "How many students are in your class?", "vi": "Có bao nhiêu học sinh trong lớp của bạn?" }
+              ],
+              "practiceTip": "Hãy nhớ nhé: Nếu bạn có thể thêm 's' vào cuối từ để tạo số nhiều, hãy dùng 'many'! Nếu không, hãy dùng 'much'."
             }
             \`\`\`
             `;
@@ -604,7 +662,6 @@
                 displayWritingFeedback(feedbackData);
                 writingFeedbackContainer.classList.remove('hidden');
 
-                // Save result to history
                 if (auth.currentUser) {
                     await saveWritingResult(userText, feedbackData);
                 }
@@ -614,7 +671,6 @@
             } finally {
                 buttonText.textContent = 'Nhận phản hồi từ AI';
                 spinner.classList.add('hidden'); 
-                // Keep button disabled after one feedback
             }
         }
         
@@ -624,17 +680,14 @@
                     <p class="text-2xl font-semibold mb-2">Điểm của bạn</p>
                     <p class="text-6xl font-bold text-sky-600">${data.score} / 100</p>
                 </div>
-
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <h4 class="text-lg font-bold text-slate-800 mb-2">Nhận xét chung</h4>
                     <p class="text-slate-700">${data.overallFeedback}</p>
                 </div>
-
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <h4 class="text-lg font-bold text-slate-800 mb-2">Bài viết đã sửa</h4>
                     <p class="text-lg leading-relaxed">${data.correctedTextHTML}</p>
                 </div>
-
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                     <h4 class="text-lg font-bold text-slate-800 mb-3">Phân tích chi tiết</h4>
                     <div class="space-y-3">
@@ -689,7 +742,7 @@
                 }
                 else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, 3);
                 else if (quizType === 'grammar') prompt = getGrammarPrompt(level, count);
-                else prompt = getListeningPrompt(level, topic, 3);
+                else if (quizType === 'listening') prompt = getListeningPrompt(level, topic, 3);
                 
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseJson(result.response.text());
@@ -998,8 +1051,20 @@
                     feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-red-100 text-red-800';
                     const displayAnswer = `Đáp án đúng là <b>"${currentQuestion.answer}"</b>.`;
                     let feedbackHTML = `<b class="font-bold">Chưa đúng.</b> ${displayAnswer}`;
-                    if(currentQuestion.explanation) { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
+                    if(currentQuestion.explanation) {
+                        feedbackHTML += `<p>${currentQuestion.explanation}</p>`;
+                    }
                     feedbackContainer.innerHTML = feedbackHTML;
+
+                    // NEW: Add Reinforcement Button on incorrect answer
+                    const reinforceBtn = document.createElement('button');
+                    reinforceBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                        Củng cố kiến thức
+                    `;
+                    reinforceBtn.className = 'mt-4 w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-2 px-4 rounded-lg text-md transition';
+                    reinforceBtn.onclick = () => requestReinforcement(currentQuestion, selectedOption);
+                    feedbackContainer.appendChild(reinforceBtn);
                 }
             }
 
@@ -1014,7 +1079,9 @@
                         saveBtn.title = `Lưu từ "${item.word || item.answer}" vào sổ tay`;
                         saveBtn.onclick = (e) => {
                             saveWordToNotebook(item.word || item.answer, item.meaning || item.definition, item.example);
-                            e.target.classList.add('saved'); e.target.innerHTML = '✅'; e.target.onclick = null;
+                            e.target.classList.add('saved');
+                            e.target.innerHTML = '✅';
+                            e.target.onclick = null;
                         };
                         feedbackContainer.firstChild.appendChild(saveBtn);
                     });
@@ -1030,6 +1097,57 @@
                 isCorrect: isCorrect
             });
         }
+
+        // --- NEW: Reinforcement Functions ---
+        async function requestReinforcement(question, userAnswer) {
+            reinforceModal.classList.remove('hidden');
+            reinforceContent.innerHTML = '<div class="spinner mx-auto"></div>';
+            reinforceTitle.textContent = "Bài học từ AI";
+
+            try {
+                const prompt = getReinforcementPrompt(question, userAnswer);
+                const result = await model.generateContent(prompt);
+                const lessonData = extractAndParseJson(result.response.text());
+
+                if (!lessonData) {
+                    throw new Error("AI không trả về bài học hợp lệ. Vui lòng thử lại.");
+                }
+                displayReinforcement(lessonData);
+
+            } catch (error) {
+                reinforceContent.innerHTML = `<p class="text-center text-red-500">Rất tiếc, không thể tạo bài học ngay lúc này. Lỗi: ${error.message}</p>`;
+            }
+        }
+
+        function displayReinforcement(data) {
+            reinforceTitle.textContent = data.conceptTitle;
+            reinforceContent.innerHTML = `
+                <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <h4 class="text-md font-bold text-red-800 mb-1">Phân tích lỗi sai</h4>
+                    <div class="text-red-700 prose">${marked.parse(data.mistakeAnalysis)}</div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <h4 class="text-md font-bold text-slate-800 mb-2">Giải thích khái niệm</h4>
+                    <div class="text-slate-700 space-y-2 prose">${marked.parse(data.conceptExplanation)}</div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <h4 class="text-md font-bold text-slate-800 mb-2">Ví dụ minh họa</h4>
+                    <ul class="space-y-2">
+                        ${data.examples.map(ex => `
+                            <li class="p-2 rounded-md bg-white">
+                                <p class="font-semibold text-sky-700">"${ex.en}"</p>
+                                <p class="text-xs text-slate-500 italic">→ ${ex.vi}</p>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <h4 class="text-md font-bold text-amber-800 mb-1">💡 Mẹo ghi nhớ</h4>
+                    <div class="text-amber-700 prose">${marked.parse(data.practiceTip)}</div>
+                </div>
+            `;
+        }
+
 
         function moveToNextQuestion() {
             currentQuestionIndex++;
@@ -1128,7 +1246,6 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.type === 'writing') {
-                        // Handle showing writing feedback from history
                         quizData = { topic: data.topic, level: data.level, quizType: 'writing' };
                         showView('writing-view');
                         writingTopic.textContent = data.topic;
@@ -1573,8 +1690,7 @@
         });
         
         backToPreviousViewButton.addEventListener('click', () => showView(reviewCameFrom));
-
-        // NEW: Writing View Listeners
+        
         backToSetupFromWriting.addEventListener('click', () => showView('setup-view'));
         getFeedbackButton.addEventListener('click', getWritingFeedback);
         writingInput.addEventListener('input', () => {
@@ -1582,6 +1698,10 @@
             const count = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
             wordCount.textContent = `${count} từ`;
         });
+
+        // NEW: Reinforce Modal Listeners
+        closeReinforceModal.addEventListener('click', () => reinforceModal.classList.add('hidden'));
+        reinforceModal.addEventListener('click', (e) => { if (e.target === reinforceModal) { reinforceModal.classList.add('hidden'); } });
 
 
         // Initial setup
