@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Tích hợp Marked.js để render Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Tích hợp Chart.js để vẽ biểu đồ -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +19,7 @@
         .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #0ea5e9; animation: spin 1s ease-in-out infinite; }
         .btn-spinner { width: 20px; height: 20px; border-width: 3px; border-left-color: white; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList, #libraryList, #writingFeedbackContainer, #reinforceContent, #learningPathContainer, #reinforcementReviewList, #conversationLog { max-height: 60vh; overflow-y: auto; }
+        #passageText, #transcriptContainer, #notebookList, #historyList, #reviewList, #libraryList, #writingFeedbackContainer, #reinforceContent { max-height: 50vh; overflow-y: auto; }
         .topic-container, .vocab-mode-container { transition: all 0.3s ease-in-out; overflow: hidden; }
         #translationModal.hidden, #confirmModal.hidden, #vocabModal.hidden, #reinforceModal.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
@@ -56,16 +54,6 @@
         .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
         .prose li { margin-bottom: 0.25rem; }
         .prose strong { font-weight: 600; }
-
-        /* Diagnostic Conversation Styles */
-        @keyframes mic-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(199, 210, 254, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(199, 210, 254, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(199, 210, 254, 0); }
-        }
-        .mic-recording {
-            animation: mic-pulse 1.5s infinite;
-        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -102,18 +90,6 @@
                         <button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Đăng xuất</button>
                     </div>
                  </div>
-            </div>
-            
-            <div id="learningPathCTA" class="hidden mb-6 p-5 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl text-white shadow-lg">
-                <h2 class="text-2xl font-bold mb-2">Lộ trình của bạn đã sẵn sàng!</h2>
-                <p class="mb-4 opacity-90">Tiếp tục hành trình chinh phục tiếng Anh của bạn ngay thôi.</p>
-                <button id="continuePathButton" class="w-full bg-white hover:bg-slate-100 text-teal-600 font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">Tiếp tục Lộ trình</button>
-            </div>
-            
-            <div id="placementTestContainer" class="mb-6 p-5 bg-gradient-to-r from-sky-500 to-indigo-500 rounded-xl text-white shadow-lg">
-                <h2 class="text-2xl font-bold mb-2">Bắt đầu Lộ trình học của bạn!</h2>
-                <p class="mb-4 opacity-90">Làm một bài kiểm tra ngắn để AI xác định trình độ và tạo lộ trình học tập cá nhân hóa cho riêng bạn.</p>
-                <button id="startPlacementTestButton" class="w-full bg-white hover:bg-slate-100 text-indigo-600 font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105">Làm bài kiểm tra trình độ</button>
             </div>
 
             <button id="quickStartButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition-transform transform hover:scale-105 flex items-center justify-center gap-3 mb-4">
@@ -178,74 +154,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Màn hình Chọn loại kiểm tra -->
-        <div id="assessment-choice-view" class="view">
-            <h2 class="text-3xl font-bold text-slate-800 mb-2 text-center">Chọn phương pháp kiểm tra</h2>
-            <p class="text-slate-500 text-lg mb-8 text-center">Hãy chọn cách bạn muốn AI đánh giá trình độ của mình.</p>
-            <div class="space-y-4">
-                <button id="startTraditionalTestButton" class="w-full p-6 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-sky-400 transition text-left">
-                    <div class="flex items-center gap-4">
-                        <div class="text-4xl">📝</div>
-                        <div>
-                            <h3 class="text-xl font-bold text-sky-700">Bài trắc nghiệm</h3>
-                            <p class="text-slate-600">Làm một bài kiểm tra 12 câu hỏi để đánh giá nhanh các kỹ năng.</p>
-                        </div>
-                    </div>
-                </button>
-                <button id="startDiagnosticConversationButton" class="w-full p-6 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-purple-400 transition text-left">
-                    <div class="flex items-center gap-4">
-                        <div class="text-4xl">💬</div>
-                        <div>
-                            <h3 class="text-xl font-bold text-purple-700">Trò chuyện với AI</h3>
-                            <p class="text-slate-600">Tham gia một cuộc hội thoại ngắn để AI đánh giá toàn diện hơn. <span class="text-xs font-bold text-white bg-purple-500 px-2 py-1 rounded-full ml-2">NÂNG CAO</span></p>
-                        </div>
-                    </div>
-                </button>
-            </div>
-            <button id="backToSetupFromChoice" class="mt-8 w-full text-slate-600 hover:text-slate-800 font-semibold py-2 px-4 rounded-lg text-md transition">Quay lại</button>
-        </div>
         
-        <!-- Màn hình Hội thoại Chẩn đoán -->
-        <div id="diagnostic-conversation-view" class="view">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold text-purple-600">Trò chuyện Chẩn đoán</h2>
-                <button id="endDiagnosticConversationButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Kết thúc</button>
-            </div>
-            <div class="min-h-[400px] flex flex-col">
-                <div id="conversationLog" class="flex-grow space-y-4 p-4 bg-slate-50 rounded-lg border mb-4 overflow-y-auto">
-                    <!-- AI and user messages will appear here -->
-                </div>
-                <div id="conversationInputArea" class="mt-auto flex items-center gap-3">
-                    <button id="micButton" class="p-4 rounded-full bg-indigo-200 hover:bg-indigo-300 text-indigo-700 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                    </button>
-                    <input type="text" id="conversationTextInput" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Hoặc gõ câu trả lời của bạn ở đây...">
-                    <button id="sendTextButton" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg">Gửi</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Màn hình Lộ trình học tập -->
-        <div id="learning-path-view" class="view">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-3xl font-bold text-teal-600">Lộ trình của bạn</h2>
-                <button id="backToSetupFromPath" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button>
-            </div>
-            <div id="learningPathContainer" class="space-y-3 pr-2">
-                <!-- Lộ trình sẽ được render ở đây -->
-            </div>
-        </div>
-        
-        <!-- Màn hình Chọn mục tiêu -->
-        <div id="goal-setting-view" class="view">
-            <h2 class="text-3xl font-bold text-slate-800 mb-2 text-center">Mục tiêu của bạn là gì?</h2>
-            <p class="text-slate-500 text-lg mb-8 text-center">Chọn một mục tiêu để AI cá nhân hóa lộ trình tốt hơn.</p>
-            <div id="goalOptionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Các mục tiêu sẽ được render ở đây -->
-            </div>
-        </div>
-
         <!-- Màn hình Thư viện bài tập -->
         <div id="library-view" class="view">
             <div class="flex justify-between items-center mb-4"><h2 class="text-3xl font-bold text-amber-600">Thư viện bài tập</h2><button id="backToSetupFromLibrary" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Quay lại</button></div>
@@ -276,7 +185,7 @@
 
         <!-- Màn hình Đang tải câu hỏi -->
         <div id="loading-view" class="view text-center py-16">
-            <div class="spinner mx-auto mb-6"></div><h2 id="loadingTitle" class="text-2xl font-semibold text-slate-700">Đang tạo bài kiểm tra...</h2><p id="loadingMessage" class="text-slate-500">AI đang chuẩn bị các câu hỏi về chủ đề <b id="loadingTopic"></b> cho bạn. Vui lòng chờ!</p>
+            <div class="spinner mx-auto mb-6"></div><h2 class="text-2xl font-semibold text-slate-700">Đang tạo bài kiểm tra...</h2><p class="text-slate-500">AI đang chuẩn bị các câu hỏi về chủ đề <b id="loadingTopic"></b> cho bạn. Vui lòng chờ!</p>
         </div>
 
         <!-- Màn hình Làm bài kiểm tra -->
@@ -349,29 +258,6 @@
             </div>
             <div id="reviewList" class="space-y-4"></div>
         </div>
-        
-        <!-- Màn hình Ôn tập & Củng cố -->
-        <div id="reinforcement-view" class="view">
-             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold text-orange-600">Ôn tập & Củng cố</h2>
-                <button id="backToPathFromReinforcement" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">Về Lộ trình</button>
-            </div>
-            <p class="text-slate-600 mb-4">Đây là những câu bạn đã làm sai. Hãy xem lại và nhấn vào nút "Bài học từ AI" để hiểu rõ hơn trước khi thử lại nhé.</p>
-            <div id="reinforcementReviewList" class="space-y-4"></div>
-             <button id="retryPathStepFromReinforcement" class="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition">Thử lại bước này</button>
-        </div>
-        
-        <!-- Màn hình Kết quả Kiểm tra Trình độ -->
-        <div id="placement-result-view" class="view text-center">
-            <h2 class="text-3xl font-bold text-slate-800 mb-2">Kết quả Kiểm tra Trình độ</h2>
-            <p class="text-slate-500 text-lg mb-6">Đây là phân tích của AI về năng lực của bạn:</p>
-            <div id="placementResultContainer" class="bg-indigo-100 border-2 border-indigo-300 rounded-xl p-8 mb-8 text-left">
-                <div class="spinner mx-auto"></div>
-            </div>
-            <div id="diagnosticChartContainer" class="hidden my-6"><canvas id="diagnosticChart"></canvas></div>
-            <button id="createPathButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-4 rounded-lg text-xl transition hidden">Tạo Lộ trình Học tập cho tôi</button>
-            <button id="backToSetupFromPlacement" class="mt-4 w-full text-slate-600 hover:text-slate-800 font-semibold py-2 px-4 rounded-lg text-md transition">Quay lại sau</button>
-        </div>
 
         <!-- Thông báo lỗi chung -->
         <div id="error-view" class="view text-center text-red-600 bg-red-100 p-6 rounded-lg">
@@ -428,73 +314,39 @@
 
 
     <script type="module">
-        // --- UPDATED IMPORTS (v11.10.0) ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
-        import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-ai.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+        import { getAI, getGenerativeModel, GoogleAIBackend } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-ai.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, getDocs, serverTimestamp, doc, getDoc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
-        // --- UPDATED FIREBASE CONFIG ---
         const firebaseConfig = {
-            apiKey: "AIzaSyA2818INoMI_LNIi3kTilRMUQXZ9S6yJjE",
-            authDomain: "giaoandientu-7782.firebaseapp.com",
-            projectId: "giaoandientu-7782",
-            storageBucket: "giaoandientu-7782.firebasestorage.app",
-            messagingSenderId: "585204135383",
-            appId: "1:585204135383:web:78c7566be2083638290792",
-            measurementId: "G-4F3MHQT43X"
+            apiKey: "AIzaSyDgEH2E7W-ltp0IJwYSOjjSitB7xQhI11E",
+            authDomain: "engai-374f7.firebaseapp.com",
+            projectId: "engai-374f7",
+            storageBucket: "engai-374f7.firebasestorage.app",
+            messagingSenderId: "793685525357",
+            appId: "1:793685525357:web:bf74f624247165fd53d064"
         };
 
-        // --- UPDATED INITIALIZATION ---
-        let app, auth, db, model, fastModel, analytics;
+        let app, auth, db, model, fastModel;
         try {
             app = initializeApp(firebaseConfig);
-            analytics = getAnalytics(app); // Initialize Analytics
             auth = getAuth(app);
             db = getFirestore(app);
             const ai = getAI(app, { backend: new GoogleAIBackend() });
-            
-            // Using dual model strategy
-            model = getGenerativeModel(ai, { model: "gemini-1.5-flash" }); // Main model
-            fastModel = getGenerativeModel(ai, { model: "gemini-1.5-flash" }); // Fast model (can be the same for simplicity or a different one)
-
-        } catch(e) { 
-            showError(`Lỗi khởi tạo: ${e.message}. Vui lòng kiểm tra cấu hình Firebase.`); 
-        }
+            // --- IMPLEMENTING DUAL MODEL STRATEGY ---
+            // Main model for high-quality, complex tasks
+            model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+            // Fast model for quick, secondary tasks
+            fastModel = getGenerativeModel(ai, { model: "gemini-2.0-flash" });
+        } catch(e) { showError(`Lỗi khởi tạo: ${e.message}.`); }
 
         // DOM Elements
-        const appContainer = document.getElementById('appContainer');
-        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountContainer = document.getElementById('questionCountContainer'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), loadingTitle = document.getElementById('loadingTitle'), loadingMessage = document.getElementById('loadingMessage'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
+        const welcomeMessage = document.getElementById('welcomeMessage'), emailInput = document.getElementById('emailInput'), passwordInput = document.getElementById('passwordInput'), loginButton = document.getElementById('loginButton'), registerButton = document.getElementById('registerButton'), logoutButton = document.getElementById('logoutButton'), authError = document.getElementById('authError'), quizTypeSelect = document.getElementById('quizTypeSelect'), vocabModeContainer = document.getElementById('vocabModeContainer'), vocabModeSelect = document.getElementById('vocabModeSelect'), topicContainer = document.getElementById('topicContainer'), topicSelect = document.getElementById('topicSelect'), levelSelect = document.getElementById('levelSelect'), questionCountContainer = document.getElementById('questionCountContainer'), questionCountSelect = document.getElementById('questionCountSelect'), startQuizButton = document.getElementById('startQuizButton'), showHistoryButton = document.getElementById('showHistoryButton'), showNotebookButton = document.getElementById('showNotebookButton'), showLibraryButton = document.getElementById('showLibraryButton'), libraryList = document.getElementById('libraryList'), backToSetupFromLibrary = document.getElementById('backToSetupFromLibrary'), notebookList = document.getElementById('notebookList'), backToSetupFromNotebook = document.getElementById('backToSetupFromNotebook'), historyDashboard = document.getElementById('historyDashboard'), recommendationsContainer = document.getElementById('recommendationsContainer'), historyFilters = document.getElementById('historyFilters'), filterSkill = document.getElementById('filterSkill'), filterLevel = document.getElementById('filterLevel'), historyList = document.getElementById('historyList'), backToSetupFromHistory = document.getElementById('backToSetupFromHistory'), loadingTopic = document.getElementById('loadingTopic'), quizTitle = document.getElementById('quizTitle'), quizSubtitle = document.getElementById('quizSubtitle'), progress = document.getElementById('progress'), scoreEl = document.getElementById('score'), progressBar = document.getElementById('progressBar'), audioPlayerContainer = document.getElementById('audioPlayerContainer'), playAudioBtn = document.getElementById('playAudioBtn'), playIcon = document.getElementById('playIcon'), pauseIcon = document.getElementById('pauseIcon'), audioStatus = document.getElementById('audioStatus'), transcriptControls = document.getElementById('transcriptControls'), showTranscriptBtn = document.getElementById('showTranscriptBtn'), transcriptContainer = document.getElementById('transcriptContainer'), passageContainer = document.getElementById('passageContainer'), passageText = document.getElementById('passageText'), questionText = document.getElementById('questionText'), translateQuestionBtn = document.getElementById('translateQuestionBtn'), optionsContainer = document.getElementById('optionsContainer'), feedbackContainer = document.getElementById('feedbackContainer'), nextQuestionButton = document.getElementById('nextQuestionButton'), playAgainButton = document.getElementById('playAgainButton'), reviewAnswersButton = document.getElementById('reviewAnswersButton'), reviewList = document.getElementById('reviewList'), backToPreviousViewButton = document.getElementById('backToPreviousViewButton'), viewHistoryFromResultButton = document.getElementById('viewHistoryFromResultButton'), finalScore = document.getElementById('finalScore'), resultMessage = document.getElementById('resultMessage'), resultScoreContainer = document.getElementById('resultScoreContainer'), errorMessage = document.getElementById('errorMessage'), backToSetupButton = document.getElementById('backToSetupButton'), streakCount = document.getElementById('streakCount'), translationModal = document.getElementById('translationModal'), translationResult = document.getElementById('translationResult'), closeTranslationModal = document.getElementById('closeTranslationModal'), confirmModal = document.getElementById('confirmModal'), confirmTitle = document.getElementById('confirmTitle'), confirmMessage = document.getElementById('confirmMessage'), confirmCancelBtn = document.getElementById('confirmCancelBtn'), confirmOkBtn = document.getElementById('confirmOkBtn'), vocabModal = document.getElementById('vocabModal'), vocabList = document.getElementById('vocabList'), closeVocabModal = document.getElementById('closeVocabModal');
         const backToSetupFromWriting = document.getElementById('backToSetupFromWriting'), writingTopic = document.getElementById('writingTopic'), writingInput = document.getElementById('writingInput'), wordCount = document.getElementById('wordCount'), getFeedbackButton = document.getElementById('getFeedbackButton'), writingFeedbackContainer = document.getElementById('writingFeedbackContainer');
         const reinforceModal = document.getElementById('reinforceModal'), reinforceTitle = document.getElementById('reinforceTitle'), reinforceContent = document.getElementById('reinforceContent'), closeReinforceModal = document.getElementById('closeReinforceModal');
         const quickStartButton = document.getElementById('quickStartButton');
         const autoAdvanceCheckbox = document.getElementById('autoAdvanceCheckbox');
-        const startPlacementTestButton = document.getElementById('startPlacementTestButton');
-        const placementResultContainer = document.getElementById('placementResultContainer');
-        const createPathButton = document.getElementById('createPathButton');
-        const backToSetupFromPlacement = document.getElementById('backToSetupFromPlacement');
-        const placementTestContainer = document.getElementById('placementTestContainer');
-        const learningPathCTA = document.getElementById('learningPathCTA');
-        const continuePathButton = document.getElementById('continuePathButton');
-        const goalOptionsContainer = document.getElementById('goalOptionsContainer');
-        const learningPathContainer = document.getElementById('learningPathContainer');
-        const backToSetupFromPath = document.getElementById('backToSetupFromPath');
-        const reinforcementReviewList = document.getElementById('reinforcementReviewList');
-        const backToPathFromReinforcement = document.getElementById('backToPathFromReinforcement');
-        const retryPathStepFromReinforcement = document.getElementById('retryPathStepFromReinforcement');
-        const assessmentChoiceView = document.getElementById('assessment-choice-view');
-        const startTraditionalTestButton = document.getElementById('startTraditionalTestButton');
-        const startDiagnosticConversationButton = document.getElementById('startDiagnosticConversationButton');
-        const backToSetupFromChoice = document.getElementById('backToSetupFromChoice');
-        const conversationLog = document.getElementById('conversationLog');
-        const conversationInputArea = document.getElementById('conversationInputArea');
-        const micButton = document.getElementById('micButton');
-        const conversationTextInput = document.getElementById('conversationTextInput');
-        const sendTextButton = document.getElementById('sendTextButton');
-        const endDiagnosticConversationButton = document.getElementById('endDiagnosticConversationButton');
-        const diagnosticChartContainer = document.getElementById('diagnosticChartContainer');
-        const diagnosticChartCanvas = document.getElementById('diagnosticChart');
 
 
         // App State
@@ -509,11 +361,6 @@
             correctPairs: 0
         };
         let autoAdvanceTimer = null;
-        let currentQuizType = 'standard'; // 'standard', 'placement', 'path', 'diagnostic'
-        let currentUserPath = null;
-        let diagnosticConversationState = {};
-        let recognition;
-        let chartInstance;
         
         // Audio State
         const synth = window.speechSynthesis;
@@ -554,21 +401,7 @@
             confirmCancelBtn.addEventListener('click', hideConfirmModal);
         }
 
-        // --- Auth & User State ---
-        async function checkUserLearningPath(userId) {
-            const pathRef = doc(db, "learningPaths", userId);
-            const docSnap = await getDoc(pathRef);
-            if (docSnap.exists() && docSnap.data().status === 'active') {
-                currentUserPath = { id: docSnap.id, ...docSnap.data() };
-                placementTestContainer.classList.add('hidden');
-                learningPathCTA.classList.remove('hidden');
-            } else {
-                currentUserPath = null;
-                placementTestContainer.classList.remove('hidden');
-                learningPathCTA.classList.add('hidden');
-            }
-        }
-
+        // --- Auth Functions ---
         async function updateUserStreak(userId) {
             const userRef = doc(db, "users", userId);
             const today = new Date().toISOString().slice(0, 10);
@@ -589,12 +422,10 @@
             if (user) { 
                 welcomeMessage.textContent = `Chào mừng, ${user.email}!`; 
                 updateUserStreak(user.uid); 
-                checkUserLearningPath(user.uid);
                 showView('setup-view'); 
             } else { 
                 showView('auth-view'); 
                 userHistoryCache = []; 
-                currentUserPath = null;
             }
         });
 
@@ -670,6 +501,7 @@
         async function getTranslation(text) {
             try {
                 const prompt = `Translate the following English text to Vietnamese. Provide only the Vietnamese translation, without any extra text or quotation marks: "${text}"`;
+                // Use fastModel for translation
                 const result = await fastModel.generateContent(prompt);
                 return result.response.text();
             } catch (error) { console.error("Translation error:", error); return "Không thể dịch được."; }
@@ -682,202 +514,98 @@
         }
         
         // --- PROMPTS ---
-        function getPlacementTestPrompt() {
-            return `You are an expert English assessment creator. Create a comprehensive placement test with exactly 12 multiple-choice questions to determine a user's CEFR level (from A2 to B2).
-            The test MUST include:
-            - 4 Grammar questions, with increasing difficulty (A2, B1, B1, B2).
-            - 4 Vocabulary questions, with increasing difficulty (A2, B1, B1, B2) covering common topics.
-            - 1 short reading passage (around 80-100 words, at a B1 level).
-            - 4 multiple-choice questions based on the reading passage.
-
-            For each question, provide one correct answer and three plausible distractors. The "answer" field MUST be the full text of the correct option.
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object with a "passage" key (which can be an empty string for non-reading questions) and a "questions" key containing an array of 12 question objects.
-            Example structure:
-            \`\`\`json
-            {
-              "passage": "...",
-              "questions": [
-                { "question": "...", "options": ["..."], "answer": "..." },
-                { "question": "...", "options": ["..."], "answer": "..." }
-              ]
-            }
-            \`\`\``;
-        }
-
-        function getPlacementAnalysisPrompt(results) {
-            const userAnswers = results.map(r => ({ question: r.question.question, userAnswer: r.userAnswer, correctAnswer: r.question.answer }));
-            return `An English learner has just completed a placement test. Here are their results: ${JSON.stringify(userAnswers)}.
-            Based on these answers, please perform the following tasks:
-            1.  Determine the user's approximate CEFR level (e.g., "A2", "B1", "B2").
-            2.  Write a short, friendly analysis (2-3 sentences in Vietnamese) of their performance, highlighting one strength and one area for improvement.
-            
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object with "level" and "analysis" keys.
-            Example:
-            \`\`\`json
-            {
-              "level": "B1",
-              "analysis": "Bạn có nền tảng ngữ pháp khá tốt và xử lý tốt các câu hỏi ở trình độ A2. Tuy nhiên, bạn cần cải thiện thêm vốn từ vựng ở các chủ đề chuyên sâu hơn để đạt trình độ B2."
-            }
-            \`\`\``;
-        }
-
-        function getLearningPathPrompt(placementResult, goal) {
-            return `An English learner has the following profile:
-            - CEFR Level determined by placement test: ${placementResult.level}
-            - Placement test analysis: "${placementResult.analysis}"
-            - Stated learning goal: "${goal}"
-
-            Based on this profile, create a personalized learning path consisting of 10-15 sequential steps. Each step should be a specific, actionable learning unit.
-            For each step, define its "type" ('vocabulary', 'grammar', 'reading', 'listening', 'writing', or 'review'), a "topic", a "level" (CEFR), and a short "description" in Vietnamese.
-            The path should start with foundational topics based on the user's weaknesses and progressively build up towards their goal. Include 'review' steps periodically to reinforce learning.
-
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of step objects.
-            Example:
-            \`\`\`json
-            [
-              {
-                "type": "grammar",
-                "topic": "Present Perfect Tense",
-                "level": "B1",
-                "description": "Ôn tập cách dùng thì Hiện tại Hoàn thành"
-              },
-              {
-                "type": "vocabulary",
-                "topic": "Work & Business",
-                "level": "B1",
-                "description": "Học 10 từ vựng cốt lõi về chủ đề Công việc"
-              },
-              {
-                "type": "review",
-                "topic": "Mixed",
-                "level": "B1",
-                "description": "Làm bài quiz ngắn ôn tập kiến thức vừa học"
-              }
-            ]
-            \`\`\``;
-        }
-
-        // **NEW** Prompt for Diagnostic Conversation Analysis
-        function getDiagnosticAnalysisPrompt(conversationData) {
-            const dataString = JSON.stringify(conversationData, null, 2);
-            return `You are a master English language assessor AI. A user has just completed a diagnostic conversation. Here is the transcript and data collected:
-            \`\`\`json
-            ${dataString}
-            \`\`\`
-            Based on ALL the provided data, perform a holistic analysis. Your response MUST be a JSON object wrapped in a 'json' markdown code block with the following structure:
-            1.  "overallLevel": A string representing the user's overall CEFR level (e.g., "A2", "B1", "B2").
-            2.  "skillsProfile": An object with scores from 0 to 100 for the following five skills:
-                - "pronunciation": Assess based on the clarity and accuracy of their spoken responses.
-                - "fluency": Assess the smoothness and speed of their speech.
-                - "listening": Assess their ability to understand the AI's spoken questions.
-                - "vocabulary": Assess the range and appropriateness of words used in both spoken and written tasks.
-                - "grammar": Assess the grammatical accuracy of their spoken and written sentences.
-            3.  "analysis": A detailed, friendly analysis in VIETNAMESE (3-4 sentences). Start by stating their overall level, then highlight their main strength and pinpoint their biggest area for improvement, giving a specific example from the conversation if possible.
-            
-            Example of the required JSON output:
-            \`\`\`json
-            {
-              "overallLevel": "B1",
-              "skillsProfile": {
-                "pronunciation": 75,
-                "fluency": 60,
-                "listening": 80,
-                "vocabulary": 65,
-                "grammar": 70
-              },
-              "analysis": "Trình độ của bạn ở khoảng B1. Bạn có khả năng nghe hiểu tốt và phát âm khá rõ ràng. Tuy nhiên, bạn cần cải thiện sự trôi chảy khi nói và mở rộng vốn từ vựng, ví dụ như trong phần mô tả bức tranh, bạn có thể dùng các tính từ đa dạng hơn."
-            }
-            \`\`\``;
-        }
-
         function getFlashcardPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} flashcards for an English learner at the ${level} CEFR level. The topic is "${topic}". For each card, provide the English "word", its IPA transcription in the "ipa" field, its Vietnamese "meaning", and an "example" sentence in English using the word. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "flashcard", "word": "sustainable", "ipa": "/səˈsteɪnəbl/", "meaning": "bền vững", "example": "We need to find more sustainable sources of energy." } ]\n\`\`\``; }
         function getMatchingPrompt(level, topic, pairCount) { return `You are an expert English teacher. Generate a single 'matching' game question for an English learner at the ${level} CEFR level. The topic is "${topic}". The question object must have a "type" of "matching" and a "pairs" array containing ${pairCount} objects. Each object in the "pairs" array must have an English "word" and its Vietnamese "meaning". You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object inside a single-element array: \`\`\`json\n[ { "type": "matching", "pairs": [ { "word": "computer", "meaning": "máy vi tính" }, { "word": "keyboard", "meaning": "bàn phím" } ] } ]\n\`\`\``; }
         function getWordScramblePrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'word scramble' questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each question, provide a "clue" which is a helpful hint or definition IN VIETNAMESE, and the "answer" which is the single English word to be scrambled. The answer must not contain spaces. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "word_scramble", "clue": "Một loại trái cây màu đỏ, thường dùng làm salad.", "answer": "tomato" } ]\n\`\`\``; }
         function getVocabularyPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} multiple-choice vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For the "answer" field, you MUST provide the full text of the correct option. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getFillInTheBlankPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'fill-in-the-blank' vocabulary questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with "___" and the correct "answer" word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "fill_in_the_blank", "question": "The government plans to ___ a new high-speed railway.", "answer": "construct", "explanation": "Construct có nghĩa là 'xây dựng'." } ]\n\`\`\``; }
         function getWordFormationPrompt(level, topic, count) { return `You are an expert English teacher. Generate ${count} 'word-formation' questions for an English learner at the ${level} CEFR level. The topic is "${topic}". For each item, provide a sentence with a blank and a base word in parentheses. The "answer" MUST be the single, correctly formed word. Provide a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "type": "word_formation", "question": "Her ___ to the team was a huge benefit. (contribute)", "answer": "contribution", "explanation": "Cần một danh từ ở đây." } ]\n\`\`\``; }
-        
-        // **FIXED** Reading prompt now enforces English for content and Vietnamese for explanation.
-        function getReadingPrompt(level, topic, count) { 
-            return `You are an expert English teacher. Create a reading comprehension quiz for a ${level} CEFR level learner on the topic of "${topic}".
-            You MUST adhere to the following language rules STRICTLY:
-            - The "passage" MUST be in ENGLISH.
-            - Each object in the "questions" array MUST have a "question" and an "options" array. Both "question" text and all strings within the "options" array MUST be in ENGLISH.
-            - The "answer" field MUST be the full text of the correct option, in ENGLISH.
-            - The "explanation" field is the ONLY field that MUST be in VIETNAMESE.
-
-            Generate one short reading passage (100-150 words) and ${count} multiple-choice questions.
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object:
-            \`\`\`json
-            { 
-              "passage": "A passage in English about the topic...", 
-              "questions": [ 
-                { 
-                  "question": "An English question about the passage?", 
-                  "options": ["English option 1", "English option 2", "English option 3", "English option 4"], 
-                  "answer": "The correct English option", 
-                  "explanation": "Một lời giải thích bằng tiếng Việt." 
-                } 
-              ] 
-            }
-            \`\`\``; 
-        }
-        
-        // **FIXED** Grammar prompt now accepts a topic
-        function getGrammarPrompt(level, topic, count) { 
-            return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for a ${level} CEFR level learner. 
-            Each question MUST specifically test the grammar point: "${topic}". If the topic is "General", you can test any common grammar point.
-            For the "answer" field, you MUST provide the full text of the correct option. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. 
-            You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: 
-            \`\`\`json
-            [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]
-            \`\`\``; 
-        }
-
+        function getReadingPrompt(level, topic, count) { return `You are an expert English teacher. Create a reading comprehension quiz. Generate one short reading passage (100-150 words) and ${count} multiple-choice questions. The topic is "${topic}" and for a ${level} CEFR level learner. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. The "answer" field MUST be the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "passage": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
+        function getGrammarPrompt(level, count) { return `You are an expert English grammar teacher. Generate ${count} multiple-choice grammar questions for a ${level} CEFR level learner. Each question should test a common grammar point. For the "answer" field, you MUST provide the full text of the correct option. Provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON array of objects: \`\`\`json\n[ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ]\n\`\`\``; }
         function getListeningPrompt(level, topic, count) { return `You are an expert English teacher. Create a listening comprehension quiz. 1. Generate one short monologue or dialogue (50-80 words). The topic is "${topic}" and for a ${level} CEFR level learner. 2. Based on the script, generate ${count} multiple-choice questions. 3. For each question, provide one correct answer, three plausible distractors, and a brief, helpful explanation IN VIETNAMESE. The "answer" field MUST be the full text of the correct option. You MUST wrap your entire response in a 'json' markdown code block. The structure MUST be a valid JSON object: \`\`\`json\n{ "script": "...", "questions": [ { "question": "...", "options": ["..."], "answer": "...", "explanation": "..." } ] }\n\`\`\``; }
         function getWritingTopicPrompt(level, topic) { return `You are an English teacher. Generate a single, engaging writing topic for an English learner at the ${level} CEFR level. The topic should be related to "${topic}". The topic should be a question or a statement to respond to. Provide only the topic text, without any extra labels or quotation marks. Example: "Describe your favorite kind of technology and explain why you like it."`; }
         function getWritingFeedbackPrompt(level, topic, userText) {
             return `You are an expert English writing evaluator. A student at the ${level} CEFR level has written the following text about the topic "${topic}".
-            Student's text: """ ${userText} """
+            
+            Student's text:
+            """
+            ${userText}
+            """
+
             Please provide feedback in Vietnamese. You MUST wrap your entire response in a 'json' markdown code block. The JSON object must have the following structure:
             1.  "overallFeedback": A general comment in Vietnamese (2-3 sentences) on the text's content, clarity, and effort.
             2.  "score": An integer score from 0 to 100.
             3.  "correctedTextHTML": The student's original text with corrections. Use "<del>" tags for deleted parts and "<ins>" tags for added parts. This should be a single HTML string.
-            4.  "detailedFeedback": An array of objects, where each object explains a specific mistake. Each object should have: "type", "mistake", "correction", "explanation".
+            4.  "detailedFeedback": An array of objects, where each object explains a specific mistake. Each object should have:
+                - "type": The type of error (e.g., "Grammar", "Spelling", "Punctuation", "Vocabulary Choice", "Style").
+                - "mistake": The incorrect phrase from the original text.
+                - "correction": The suggested correction.
+                - "explanation": A brief explanation in Vietnamese about why it was wrong and why the correction is better.
+
             Example of the required JSON output:
             \`\`\`json
             {
               "overallFeedback": "Làm tốt lắm! Bạn đã diễn đạt được ý chính của mình. Tuy nhiên, hãy chú ý đến một vài lỗi ngữ pháp và cách dùng từ để bài viết tự nhiên hơn nhé.",
               "score": 75,
               "correctedTextHTML": "My favorite <del>technologies</del> <ins>technology</ins> is the smartphone. I use <del>it</del> <ins>it for</ins> many <del>thing</del> <ins>things</ins>, like <ins>communicating with</ins> friends and <del>listen</del> <ins>listening</ins> to music.",
-              "detailedFeedback": [ { "type": "Grammar", "mistake": "technologies is", "correction": "technology is", "explanation": "'Technology' khi nói về một khái niệm chung thường là danh từ không đếm được, nên dùng ở dạng số ít." } ]
+              "detailedFeedback": [
+                {
+                  "type": "Grammar",
+                  "mistake": "technologies is",
+                  "correction": "technology is",
+                  "explanation": "'Technology' khi nói về một khái niệm chung thường là danh từ không đếm được, nên dùng ở dạng số ít."
+                },
+                {
+                  "type": "Vocabulary Choice",
+                  "mistake": "use it many thing",
+                  "correction": "use it for many things",
+                  "explanation": "Cấu trúc đúng là 'use something for something'. 'Thing' cần ở dạng số nhiều 'things' vì đi với 'many'."
+                }
+              ]
             }
-            \`\`\``;
+            \`\`\`
+            `;
         }
+        
         function getReinforcementPrompt(question, userAnswer) {
             const level = quizData.level;
             const questionText = question.question || question.clue;
             const options = question.options ? JSON.stringify(question.options) : 'N/A';
+            
             return `You are an expert and friendly English tutor AI. A student has made a mistake on a quiz. Your task is to provide a comprehensive, easy-to-understand lesson to help them master the concept they got wrong.
+
             The student is at the ${level} CEFR level.
-            Quiz question: - Question: "${questionText}" - Options (if any): ${options} - Correct Answer: "${question.answer}" - Student's Incorrect Answer: "${userAnswer}"
+
+            Here is the quiz question:
+            - Question: "${questionText}"
+            - Options (if any): ${options}
+            - Correct Answer: "${question.answer}"
+            - Student's Incorrect Answer: "${userAnswer}"
+
             Please generate a lesson in Vietnamese. You MUST wrap your entire response in a 'json' markdown code block. The JSON object must have the following structure:
-            1. "conceptTitle": A short, clear title for the lesson.
-            2. "mistakeAnalysis": A friendly explanation of why the student's answer was incorrect.
-            3. "conceptExplanation": A detailed but easy-to-understand explanation of the core concept.
-            4. "examples": An array of at least 3 distinct objects, each with an "en" and "vi" field.
-            5. "practiceTip": A final, encouraging tip.
+            1. "conceptTitle": A short, clear title for the lesson (e.g., "Cách dùng thì Hiện tại Hoàn thành", "Sự khác biệt giữa 'affect' và 'effect'").
+            2. "mistakeAnalysis": A friendly explanation of why the student's answer was incorrect in this specific context.
+            3. "conceptExplanation": A detailed but easy-to-understand explanation of the core grammar rule or vocabulary concept. Use bullet points or short paragraphs with Markdown formatting (like **bold** and *italics*).
+            4. "examples": An array of at least 3 distinct objects, each with an "en" (English sentence) and "vi" (Vietnamese translation) field, demonstrating the correct usage.
+            5. "practiceTip": A final, encouraging tip for the student to remember and practice this concept.
+
             Example of the required JSON output:
             \`\`\`json
             {
               "conceptTitle": "Phân biệt 'Much' và 'Many'",
               "mistakeAnalysis": "Bạn đã chọn 'much' nhưng 'friends' là một danh từ đếm được ở dạng số nhiều. Trong trường hợp này, chúng ta phải dùng 'many'.",
-              "conceptExplanation": "'Many' và 'much' đều có nghĩa là 'nhiều', nhưng cách dùng khác nhau...",
-              "examples": [ { "en": "She has many books on her shelf.", "vi": "Cô ấy có nhiều sách trên kệ." } ],
-              "practiceTip": "Hãy nhớ nhé: Nếu bạn có thể thêm 's' vào cuối từ để tạo số nhiều, hãy dùng 'many'!"
+              "conceptExplanation": "'Many' và 'much' đều có nghĩa là 'nhiều', nhưng cách dùng khác nhau:\\n- **Many**: Dùng với danh từ đếm được (countable nouns) ở dạng số nhiều. Ví dụ: books, people, cars.\\n- **Much**: Dùng với danh từ không đếm được (uncountable nouns). Ví dụ: water, time, information, money.",
+              "examples": [
+                { "en": "She has many books on her shelf.", "vi": "Cô ấy có nhiều sách trên kệ." },
+                { "en": "I don't have much time to finish the project.", "vi": "Tôi không có nhiều thời gian để hoàn thành dự án." },
+                { "en": "How many students are in your class?", "vi": "Có bao nhiêu học sinh trong lớp của bạn?" }
+              ],
+              "practiceTip": "Hãy nhớ nhé: Nếu bạn có thể thêm 's' vào cuối từ để tạo số nhiều, hãy dùng 'many'! Nếu không, hãy dùng 'much'."
             }
-            \`\`\``;
+            \`\`\`
+            `;
         }
+
 
         // --- Quiz & Writing Lifecycle ---
         async function startPractice() {
@@ -900,18 +628,16 @@
             await startQuiz(quickStartSettings);
         }
 
-        async function startWritingPractice(settings = null) {
-            currentQuizType = settings ? 'path' : 'standard';
-            const level = settings ? settings.level : levelSelect.value;
-            const topic = settings ? settings.topic : topicSelect.value;
-            
+        async function startWritingPractice() {
+            const level = levelSelect.value;
+            const topic = topicSelect.value;
             quizData = { topic, level, quizType: 'writing' };
 
             showView('loading-view');
-            loadingTitle.textContent = 'Đang tạo chủ đề...';
-            loadingMessage.textContent = `AI đang nghĩ ra một chủ đề Luyện Viết thú vị cho bạn.`;
+            loadingTopic.textContent = `chủ đề Luyện Viết`;
             try {
                 const prompt = getWritingTopicPrompt(level, topic);
+                // Use main model for creative task
                 const result = await model.generateContent(prompt);
                 const topicText = result.response.text();
 
@@ -947,6 +673,7 @@
 
             try {
                 const prompt = getWritingFeedbackPrompt(quizData.level, quizData.topic, userText);
+                // Use main model for complex analysis
                 const result = await model.generateContent(prompt);
                 const feedbackData = extractAndParseJson(result.response.text());
 
@@ -958,11 +685,7 @@
                 writingFeedbackContainer.classList.remove('hidden');
 
                 if (auth.currentUser) {
-                    if (currentQuizType === 'path') {
-                        await handlePathStepCompletion(feedbackData.score, 100);
-                    } else {
-                         await saveWritingResult(userText, feedbackData);
-                    }
+                    await saveWritingResult(userText, feedbackData);
                 }
 
             } catch (error) {
@@ -1014,32 +737,8 @@
             }
         }
 
-        // --- Learning Path & Quiz Lifecycle ---
-        async function startPlacementTest() {
-            currentQuizType = 'placement';
-            sessionResults = []; 
-            quizData = { topic: "Placement Test", level: "Mixed", quizType: "placement", count: 12 };
-            loadingTitle.textContent = 'Đang tạo bài kiểm tra...';
-            loadingMessage.textContent = `AI đang chuẩn bị Bài kiểm tra trình độ cho bạn.`;
-            showView('loading-view');
-            try {
-                const prompt = getPlacementTestPrompt();
-                const result = await model.generateContent(prompt);
-                const parsedData = extractAndParseJson(result.response.text());
-                if (!parsedData || !parsedData.questions) throw new Error("AI did not return a valid placement test.");
-                
-                quizData.raw = parsedData;
-                currentQuestionIndex = 0; score = 0;
-                
-                renderQuiz();
-                showView('quiz-view');
-            } catch (error) {
-                showError(`Không thể tạo bài kiểm tra trình độ. Lỗi: ${error.message}.`);
-            }
-        }
 
         async function startQuiz(settings = null) {
-            if(!settings) currentQuizType = 'standard';
             sessionResults = []; 
             const quizType = settings ? settings.type : quizTypeSelect.value;
             const vocabMode = vocabModeSelect.value;
@@ -1048,12 +747,11 @@
             const count = settings ? (settings.count || 5) : questionCountSelect.value;
             
             quizData = { topic, level, quizType, vocabMode, count };
-            loadingTitle.textContent = 'Đang tạo bài kiểm tra...';
-            loadingMessage.textContent = `AI đang chuẩn bị các câu hỏi về chủ đề ${topic} cho bạn. Vui lòng chờ!`;
+            loadingTopic.textContent = `"${topic}"`;
             showView('loading-view');
             try {
                 let prompt;
-                if (quizType === 'vocabulary' || quizType === 'review') { // 'review' uses vocabulary prompts
+                if (quizType === 'vocabulary') {
                     switch(vocabMode) {
                         case 'fill_in_the_blank': prompt = getFillInTheBlankPrompt(level, topic, count); break;
                         case 'word_formation': prompt = getWordFormationPrompt(level, topic, count); break;
@@ -1065,10 +763,10 @@
                     }
                 }
                 else if (quizType === 'reading') prompt = getReadingPrompt(level, topic, 3);
-                // **FIXED** Pass topic to grammar prompt
-                else if (quizType === 'grammar') prompt = getGrammarPrompt(level, topic, count);
+                else if (quizType === 'grammar') prompt = getGrammarPrompt(level, count);
                 else if (quizType === 'listening') prompt = getListeningPrompt(level, topic, 3);
                 
+                // Use main model for quiz generation
                 const result = await model.generateContent(prompt);
                 const parsedData = extractAndParseJson(result.response.text());
                 if (!parsedData) throw new Error("AI did not return valid JSON data.");
@@ -1076,7 +774,7 @@
                 quizData.raw = parsedData;
                 currentQuestionIndex = 0; score = 0;
                 
-                if (currentQuizType === 'standard' && !settings?.isRetry) { saveQuizToLibrary(quizData); }
+                if (!settings?.isRetry) { saveQuizToLibrary(quizData); }
 
                 renderQuiz();
                 showView('quiz-view');
@@ -1086,30 +784,20 @@
         }
         
         function renderQuiz() {
-            const isReading = quizData.quizType === 'reading' || (currentQuizType === 'placement' && quizData.raw.passage);
+            const isReading = quizData.quizType === 'reading';
             const isListening = quizData.quizType === 'listening';
-            const questions = quizData.raw.questions || (Array.isArray(quizData.raw) ? quizData.raw : []);
+            const questions = isReading || isListening ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             
-            if (currentQuizType === 'placement') {
-                quizTitle.textContent = "Bài kiểm tra trình độ";
-                quizSubtitle.textContent = "Hoàn thành tất cả câu hỏi để xác định năng lực của bạn.";
-            } else if (currentQuizType === 'path') {
-                const step = currentUserPath.path[currentUserPath.currentStep];
-                quizTitle.textContent = `Lộ trình: ${step.description}`;
-                quizSubtitle.textContent = `Bước ${currentUserPath.currentStep + 1} / ${currentUserPath.path.length}`;
-            }
-            else {
-                const typeMap = { vocabulary: 'Luyện tập Từ vựng', reading: 'Luyện tập Đọc hiểu', grammar: 'Luyện tập Ngữ pháp', listening: 'Luyện tập Nghe hiểu' };
-                const modeMap = { multiple_choice: 'Trắc nghiệm', fill_in_the_blank: 'Điền từ', word_formation: 'Dạng của từ', word_scramble: 'Sắp xếp chữ cái', matching: 'Nối từ', flashcard: 'Flashcards' };
-                quizTitle.textContent = typeMap[quizData.quizType];
-                let subtitleParts = [];
-                if (quizData.quizType === 'vocabulary') { subtitleParts.push(modeMap[quizData.vocabMode]); }
-                if (quizData.quizType !== 'grammar') { subtitleParts.push(`Chủ đề: ${quizData.topic}`); }
-                subtitleParts.push(`Trình độ: ${quizData.level.toUpperCase()}`);
-                quizSubtitle.textContent = subtitleParts.join(' - ');
-            }
-            
+            const typeMap = { vocabulary: 'Luyện tập Từ vựng', reading: 'Luyện tập Đọc hiểu', grammar: 'Luyện tập Ngữ pháp', listening: 'Luyện tập Nghe hiểu' };
+            const modeMap = { multiple_choice: 'Trắc nghiệm', fill_in_the_blank: 'Điền từ', word_formation: 'Dạng của từ', word_scramble: 'Sắp xếp chữ cái', matching: 'Nối từ', flashcard: 'Flashcards' };
+            quizTitle.textContent = typeMap[quizData.quizType];
+            let subtitleParts = [];
+            if (quizData.quizType === 'vocabulary') { subtitleParts.push(modeMap[quizData.vocabMode]); }
+            if (quizData.quizType !== 'grammar') { subtitleParts.push(`Chủ đề: ${quizData.topic}`); }
+            subtitleParts.push(`Trình độ: ${quizData.level.toUpperCase()}`);
+            quizSubtitle.textContent = subtitleParts.join(' - ');
+
             scoreEl.style.display = quizData.vocabMode === 'flashcard' ? 'none' : 'block';
             progress.textContent = `Câu ${currentQuestionIndex + 1} / ${total}`;
             progressBar.style.width = `${((currentQuestionIndex + 1) / total) * 100}%`;
@@ -1127,7 +815,7 @@
             feedbackContainer.innerHTML = '';
             feedbackContainer.className = 'mt-6 p-4 rounded-lg min-h-[100px]';
             nextQuestionButton.classList.add('hidden');
-            const questions = quizData.raw.questions || (Array.isArray(quizData.raw) ? quizData.raw : []);
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const currentQuestion = questions[currentQuestionIndex];
             
             optionsContainer.innerHTML = '';
@@ -1358,7 +1046,7 @@
                 return;
             }
 
-            const questions = quizData.raw.questions || (Array.isArray(quizData.raw) ? quizData.raw : []);
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const currentQuestion = questions[currentQuestionIndex];
             const questionType = currentQuestion.type || 'multiple_choice';
             
@@ -1385,29 +1073,27 @@
                     score++;
                     feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-green-100 text-green-800';
                     let feedbackHTML = `<b class="font-bold">Chính xác!</b>`;
-                    if(currentQuestion.explanation && currentQuizType === 'standard') { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
+                    if(currentQuestion.explanation) { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
                     feedbackContainer.innerHTML = feedbackHTML;
                 } else {
                     feedbackContainer.className = 'mt-6 p-4 rounded-lg bg-red-100 text-red-800';
                     const displayAnswer = `Đáp án đúng là <b>"${currentQuestion.answer}"</b>.`;
                     let feedbackHTML = `<b class="font-bold">Chưa đúng.</b> ${displayAnswer}`;
-                    if(currentQuestion.explanation && currentQuizType === 'standard') { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
+                    if(currentQuestion.explanation) { feedbackHTML += `<p>${currentQuestion.explanation}</p>`; }
                     feedbackContainer.innerHTML = feedbackHTML;
 
-                    if (currentQuizType === 'standard') {
-                        const reinforceBtn = document.createElement('button');
-                        reinforceBtn.innerHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
-                            Củng cố kiến thức
-                        `;
-                        reinforceBtn.className = 'mt-4 w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-2 px-4 rounded-lg text-md transition';
-                        reinforceBtn.onclick = () => requestReinforcement(currentQuestion, selectedOption);
-                        feedbackContainer.appendChild(reinforceBtn);
-                    }
+                    const reinforceBtn = document.createElement('button');
+                    reinforceBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                        Củng cố kiến thức
+                    `;
+                    reinforceBtn.className = 'mt-4 w-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white font-bold py-2 px-4 rounded-lg text-md transition';
+                    reinforceBtn.onclick = () => requestReinforcement(currentQuestion, selectedOption);
+                    feedbackContainer.appendChild(reinforceBtn);
                 }
             }
 
-            if (isCorrect && currentQuizType === 'standard') {
+            if (isCorrect) {
                 if(quizData.quizType === 'vocabulary') {
                     const wordsToSave = questionType === 'matching' ? currentQuestion.pairs : [{ word: currentQuestion.answer, definition: currentQuestion.explanation || currentQuestion.clue, example: currentQuestion.question }];
                     
@@ -1427,7 +1113,7 @@
 
             scoreEl.textContent = `Điểm: ${score}`;
             
-            if (autoAdvanceCheckbox.checked && currentQuizType === 'standard') {
+            if (autoAdvanceCheckbox.checked) {
                 autoAdvanceTimer = setTimeout(moveToNextQuestion, 3000);
             } else {
                 nextQuestionButton.classList.remove('hidden');
@@ -1447,6 +1133,7 @@
 
             try {
                 const prompt = getReinforcementPrompt(question, userAnswer);
+                // Use main model for in-depth lesson
                 const result = await model.generateContent(prompt);
                 const lessonData = extractAndParseJson(result.response.text());
 
@@ -1492,31 +1179,17 @@
 
         function moveToNextQuestion() {
             currentQuestionIndex++;
-            const questions = quizData.raw.questions || (Array.isArray(quizData.raw) ? quizData.raw : []);
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             if (currentQuestionIndex < total) {
                 renderQuiz();
             } else {
-                if (currentQuizType === 'placement' || currentQuizType === 'diagnostic') {
-                    showPlacementResult();
-                } else if (currentQuizType === 'path') {
-                    handlePathStepCompletion(score, total);
-                } else {
-                    showResult();
-                }
+                showResult();
             }
         }
 
         async function showResult() {
-            // Reset result view for standard quizzes
-            playAgainButton.textContent = "Làm lại";
-            playAgainButton.onclick = () => showView('setup-view');
-            reviewAnswersButton.textContent = "Xem lại bài làm";
-            reviewAnswersButton.onclick = () => showReviewPage(sessionResults, quizData.raw, 'result-view');
-            reviewAnswersButton.classList.remove('hidden');
-            viewHistoryFromResultButton.classList.remove('hidden');
-
-            const questions = quizData.raw.questions || (Array.isArray(quizData.raw) ? quizData.raw : []);
+            const questions = quizData.quizType === 'reading' || quizData.quizType === 'listening' ? quizData.raw.questions : (Array.isArray(quizData.raw) ? quizData.raw : []);
             const total = questions.length;
             
             resultScoreContainer.style.display = quizData.vocabMode === 'flashcard' ? 'none' : 'block';
@@ -1548,328 +1221,6 @@
                 else resultMessage.textContent = "Đừng nản lòng! Mỗi lần luyện tập là một bước tiến.";
             }
             showView('result-view');
-        }
-        
-        async function showPlacementResult() {
-            showView('placement-result-view');
-            placementResultContainer.innerHTML = '<div class="spinner mx-auto"></div>';
-            diagnosticChartContainer.classList.add('hidden');
-            try {
-                let analysisData;
-                if(currentQuizType === 'diagnostic') {
-                    const prompt = getDiagnosticAnalysisPrompt(diagnosticConversationState.history);
-                    const result = await model.generateContent(prompt);
-                    analysisData = extractAndParseJson(result.response.text());
-                    if (!analysisData) throw new Error("AI did not return a valid diagnostic analysis.");
-                    
-                    renderDiagnosticChart(analysisData.skillsProfile);
-                    diagnosticChartContainer.classList.remove('hidden');
-                } else {
-                    const prompt = getPlacementAnalysisPrompt(sessionResults);
-                    const result = await model.generateContent(prompt);
-                    analysisData = extractAndParseJson(result.response.text());
-                    if (!analysisData) throw new Error("AI did not return a valid placement analysis.");
-                }
-
-                placementResultContainer.innerHTML = `
-                    <div class="text-center mb-4">
-                        <p class="text-lg font-semibold text-indigo-800">Trình độ ước tính của bạn</p>
-                        <p class="text-6xl font-bold text-indigo-600">${analysisData.level || analysisData.overallLevel}</p>
-                    </div>
-                    <div>
-                        <h4 class="text-lg font-bold text-slate-800 mb-2">Phân tích từ AI</h4>
-                        <p class="text-slate-700 text-base">${analysisData.analysis}</p>
-                    </div>
-                `;
-                createPathButton.classList.remove('hidden');
-
-                if (auth.currentUser) {
-                    const pathRef = doc(db, "learningPaths", auth.currentUser.uid);
-                    await setDoc(pathRef, {
-                        userId: auth.currentUser.uid,
-                        placementTestResult: {
-                            level: analysisData.level || analysisData.overallLevel,
-                            analysis: analysisData.analysis,
-                            score: score,
-                            totalQuestions: sessionResults.length,
-                            completedAt: serverTimestamp(),
-                            type: currentQuizType
-                        },
-                        status: 'pending_generation'
-                    }, { merge: true });
-                }
-
-            } catch (error) {
-                placementResultContainer.innerHTML = `<p class="text-center text-red-500">Rất tiếc, không thể phân tích kết quả. Lỗi: ${error.message}</p>`;
-            }
-        }
-        
-        // --- NEW: Chart Rendering Function ---
-        function renderDiagnosticChart(skillsProfile) {
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-            const ctx = diagnosticChartCanvas.getContext('2d');
-            const data = {
-                labels: ['Phát âm', 'Lưu loát', 'Nghe', 'Từ vựng', 'Ngữ pháp'],
-                datasets: [{
-                    label: 'Điểm kỹ năng',
-                    data: [
-                        skillsProfile.pronunciation,
-                        skillsProfile.fluency,
-                        skillsProfile.listening,
-                        skillsProfile.vocabulary,
-                        skillsProfile.grammar
-                    ],
-                    fill: true,
-                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                    borderColor: 'rgb(99, 102, 241)',
-                    pointBackgroundColor: 'rgb(99, 102, 241)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgb(99, 102, 241)'
-                }]
-            };
-            const config = {
-                type: 'radar',
-                data: data,
-                options: {
-                    elements: {
-                        line: {
-                            borderWidth: 3
-                        }
-                    },
-                    scales: {
-                        r: {
-                            angleLines: {
-                                display: false
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 100,
-                            pointLabels: {
-                                font: {
-                                    size: 14,
-                                    family: "'Be Vietnam Pro', sans-serif"
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            };
-            chartInstance = new Chart(ctx, config);
-        }
-
-        // --- Learning Path Functions ---
-        function showGoalSetting() {
-            goalOptionsContainer.innerHTML = '';
-            const goals = [
-                { key: 'travel', text: 'Giao tiếp khi đi du lịch', icon: '✈️' },
-                { key: 'work', text: 'Phục vụ công việc', icon: '💼' },
-                { key: 'certification', text: 'Luyện thi chứng chỉ', icon: '🎓' },
-                { key: 'general', text: 'Cải thiện tổng quát', icon: '🧠' }
-            ];
-
-            goals.forEach(goal => {
-                const button = document.createElement('button');
-                button.className = 'p-6 border-2 border-slate-300 rounded-lg hover:bg-slate-100 hover:border-indigo-400 transition text-lg text-center';
-                button.innerHTML = `<div class="text-4xl mb-2">${goal.icon}</div><span class="font-semibold">${goal.text}</span>`;
-                button.onclick = () => handleGoalSelection(goal.text);
-                goalOptionsContainer.appendChild(button);
-            });
-
-            showView('goal-setting-view');
-        }
-
-        async function handleGoalSelection(goal) {
-            if (!auth.currentUser) return showError("Vui lòng đăng nhập để tạo lộ trình.");
-
-            loadingTitle.textContent = 'AI đang xây dựng lộ trình...';
-            loadingMessage.textContent = `Dựa trên kết quả và mục tiêu "${goal}" của bạn, AI đang tạo ra một kế hoạch học tập độc nhất.`;
-            showView('loading-view');
-
-            try {
-                const pathRef = doc(db, "learningPaths", auth.currentUser.uid);
-                const docSnap = await getDoc(pathRef);
-
-                if (!docSnap.exists() || !docSnap.data().placementTestResult) {
-                    throw new Error("Không tìm thấy kết quả kiểm tra đầu vào.");
-                }
-                const placementResult = docSnap.data().placementTestResult;
-                
-                const prompt = getLearningPathPrompt(placementResult, goal);
-                const result = await model.generateContent(prompt);
-                const pathData = extractAndParseJson(result.response.text());
-
-                if (!pathData || !Array.isArray(pathData)) {
-                    throw new Error("AI không trả về một lộ trình hợp lệ.");
-                }
-
-                await setDoc(pathRef, {
-                    goal: goal,
-                    path: pathData,
-                    currentStep: 0,
-                    status: 'active',
-                    generatedAt: serverTimestamp()
-                }, { merge: true });
-                
-                await checkUserLearningPath(auth.currentUser.uid);
-                showLearningPath();
-
-            } catch (error) {
-                showError(`Không thể tạo lộ trình. Lỗi: ${error.message}`);
-            }
-        }
-
-        function showLearningPath() {
-            if (!currentUserPath) {
-                showError("Không tìm thấy lộ trình học tập.");
-                return;
-            }
-            renderLearningPath(currentUserPath.path, currentUserPath.currentStep);
-            showView('learning-path-view');
-        }
-
-        function renderLearningPath(path, currentStep) {
-            learningPathContainer.innerHTML = '';
-            const icons = {
-                grammar: '📖', vocabulary: '🧠', reading: '📰',
-                listening: '🎧', writing: '✍️', review: '🎯'
-            };
-            path.forEach((step, index) => {
-                const isCompleted = index < currentStep;
-                const isActive = index === currentStep;
-                const isLocked = index > currentStep;
-
-                const item = document.createElement('div');
-                item.className = `p-4 rounded-lg border-2 flex items-center gap-4 transition-all duration-300 ${isCompleted ? 'bg-green-100 border-green-300 opacity-70' : ''} ${isActive ? 'bg-white border-teal-500 shadow-lg scale-105' : ''} ${isLocked ? 'bg-slate-100 border-slate-300 opacity-60' : ''}`;
-                
-                item.innerHTML = `
-                    <div class="text-4xl">${isLocked ? '🔒' : (icons[step.type] || '📚')}</div>
-                    <div>
-                        <p class="font-bold text-slate-800">${step.description}</p>
-                        <p class="text-sm text-slate-500 capitalize">${step.type} - ${step.topic} - Level ${step.level}</p>
-                    </div>
-                    ${isActive ? `<button class="start-step-btn ml-auto bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg">Bắt đầu</button>` : ''}
-                    ${isCompleted ? `<div class="ml-auto text-2xl text-green-500">✅</div>` : ''}
-                `;
-                learningPathContainer.appendChild(item);
-            });
-        }
-        
-        async function startPathStep() {
-            if (!currentUserPath) return showError("Không tìm thấy lộ trình học tập.");
-            
-            const step = currentUserPath.path[currentUserPath.currentStep];
-            if (!step) return showError("Lỗi: Không tìm thấy bước học hiện tại.");
-
-            currentQuizType = 'path';
-            sessionResults = [];
-            score = 0;
-            currentQuestionIndex = 0;
-
-            const settings = {
-                type: step.type,
-                topic: step.topic,
-                level: step.level,
-                count: (step.type === 'review' || step.type === 'reading' || step.type === 'listening') ? 5 : 10,
-                isRetry: true
-            };
-            
-            if (step.type === 'writing') {
-                startWritingPractice(settings);
-            } else {
-                startQuiz(settings);
-            }
-        }
-
-        async function handlePathStepCompletion(achievedScore, totalScore) {
-            if (!auth.currentUser || !currentUserPath) return;
-
-            const step = currentUserPath.path[currentUserPath.currentStep];
-            const percentage = totalScore > 0 ? (achievedScore / totalScore) * 100 : 0;
-            const passingThreshold = 70; // 70% to pass
-
-            showView('result-view');
-
-            if (percentage >= passingThreshold) {
-                // Passed the step
-                const newStep = currentUserPath.currentStep + 1;
-                const pathRef = doc(db, "learningPaths", auth.currentUser.uid);
-                try {
-                    await updateDoc(pathRef, { currentStep: newStep });
-                    currentUserPath.currentStep = newStep;
-
-                    resultScoreContainer.innerHTML = `<p class="text-2xl font-semibold mb-2 text-teal-700">Hoàn thành bước!</p><p class="text-6xl font-bold text-teal-600">🎉</p>`;
-                    finalScore.textContent = `${achievedScore} / ${totalScore}`;
-                    resultMessage.textContent = "Làm tốt lắm! Bạn đã mở khóa bước tiếp theo trong lộ trình của mình.";
-
-                    playAgainButton.textContent = "Tiếp tục Lộ trình";
-                    playAgainButton.onclick = showLearningPath;
-
-                    // When passing, allow reviewing answers for quizzes, or feedback for writing
-                    if (step.type === 'writing') {
-                        reviewAnswersButton.textContent = "Xem lại Phản hồi";
-                        reviewAnswersButton.onclick = () => showView('writing-view');
-                    } else {
-                        reviewAnswersButton.textContent = "Xem lại Bài làm";
-                        reviewAnswersButton.onclick = () => showReviewPage(sessionResults, quizData.raw, 'result-view');
-                    }
-                    reviewAnswersButton.classList.remove('hidden');
-                    viewHistoryFromResultButton.classList.add('hidden');
-
-                } catch (error) {
-                    showError("Không thể cập nhật tiến độ lộ trình. Lỗi: " + error.message);
-                }
-            } else {
-                // Failed the step
-                resultScoreContainer.innerHTML = `<p class="text-2xl font-semibold mb-2 text-orange-700">Chưa đạt!</p><p class="text-6xl font-bold text-orange-600">💪</p>`;
-                finalScore.textContent = `${achievedScore} / ${totalScore}`;
-                resultMessage.textContent = `Bạn cần đạt ít nhất ${passingThreshold}% để qua bước này. Hãy cố gắng ôn tập và làm lại nhé!`;
-
-                playAgainButton.textContent = "Thử lại ngay";
-                playAgainButton.onclick = startPathStep;
-
-                // If failed a writing step, review the feedback. If failed a quiz, go to reinforcement.
-                if (step.type === 'writing') {
-                    reviewAnswersButton.textContent = "Xem lại Phản hồi";
-                    reviewAnswersButton.onclick = () => showView('writing-view');
-                } else {
-                    reviewAnswersButton.textContent = "Xem lại & Ôn tập";
-                    reviewAnswersButton.onclick = showReinforcementView;
-                }
-                reviewAnswersButton.classList.remove('hidden');
-                viewHistoryFromResultButton.classList.add('hidden');
-            }
-        }
-
-        function showReinforcementView() {
-            reinforcementReviewList.innerHTML = '';
-            const incorrectAnswers = sessionResults.filter(r => !r.isCorrect);
-
-            if (incorrectAnswers.length === 0) {
-                reinforcementReviewList.innerHTML = '<p class="text-center text-slate-500">Tuyệt vời, bạn không làm sai câu nào trong lần thử này!</p>';
-            } else {
-                incorrectAnswers.forEach((result, index) => {
-                    const item = document.createElement('div');
-                    const q = result.question;
-                    item.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
-                    item.innerHTML = `
-                        <p class="font-semibold text-slate-800">${index + 1}. ${q.question || q.clue}</p>
-                        <p class="text-sm text-slate-700 mt-2">Câu trả lời của bạn: <b class="text-red-700 font-semibold">${result.userAnswer || '(Chưa trả lời)'}</b></p>
-                        <p class="text-sm text-slate-700 mt-1">Đáp án đúng: <b class="text-green-700 font-semibold">${q.answer}</b></p>
-                        <button class="reinforce-btn mt-3 bg-fuchsia-500 hover:bg-fuchsia-600 text-white text-xs font-bold py-1 px-3 rounded-full" data-question-index="${sessionResults.indexOf(result)}">
-                            Bài học từ AI
-                        </button>
-                    `;
-                    reinforcementReviewList.appendChild(item);
-                });
-            }
-            showView('reinforcement-view');
         }
 
         // --- Review & History Functions ---
@@ -2271,7 +1622,6 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const savedQuiz = docSnap.data();
-                    currentQuizType = 'standard';
                     quizData = {
                         topic: savedQuiz.topic, level: savedQuiz.level, quizType: savedQuiz.quizType,
                         vocabMode: savedQuiz.vocabMode, count: savedQuiz.count, raw: savedQuiz.quizContent, isRetry: true
@@ -2303,131 +1653,6 @@
             } catch (error) { console.error("Error loading related vocabulary:", error); showError("Không thể tải danh sách từ vựng."); }
         }
         
-        // --- Diagnostic Conversation Functions ---
-        function initSpeechRecognition() {
-            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!window.SpeechRecognition) {
-                alert("Rất tiếc, trình duyệt của bạn không hỗ trợ nhận dạng giọng nói. Vui lòng sử dụng Chrome hoặc Edge.");
-                micButton.disabled = true;
-                return;
-            }
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                handleUserResponse(transcript, 'speech');
-            };
-
-            recognition.onspeechend = () => {
-                recognition.stop();
-            };
-
-            recognition.onend = () => {
-                micButton.classList.remove('mic-recording', 'bg-red-400');
-                micButton.disabled = false;
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error", event.error);
-                micButton.classList.remove('mic-recording', 'bg-red-400');
-                micButton.disabled = false;
-            };
-        }
-
-        function addMessageToLog(sender, text, type = 'text') {
-            const messageDiv = document.createElement('div');
-            let contentHTML = '';
-            if (type === 'speech') {
-                contentHTML = `<p class="p-3 rounded-lg bg-indigo-100 text-indigo-800">${text}</p>`;
-            } else {
-                contentHTML = `<p class="p-3 rounded-lg ${sender === 'ai' ? 'bg-slate-200 text-slate-800' : 'bg-indigo-100 text-indigo-800'}">${text}</p>`;
-            }
-
-            messageDiv.innerHTML = `
-                <div class="font-bold text-sm mb-1 ${sender === 'ai' ? 'text-slate-600' : 'text-indigo-600'}">${sender === 'ai' ? 'AI' : 'Bạn'}</div>
-                ${contentHTML}
-            `;
-            conversationLog.appendChild(messageDiv);
-            conversationLog.scrollTop = conversationLog.scrollHeight;
-
-            if (sender === 'user') {
-                diagnosticConversationState.history.push({ role: 'user', text: text, inputType: type });
-            } else { // AI
-                diagnosticConversationState.history.push({ role: 'ai', text: text });
-            }
-        }
-
-        async function handleUserResponse(text, type = 'text') {
-            if (!text.trim()) return;
-
-            addMessageToLog('user', text, type);
-            conversationTextInput.value = '';
-            conversationInputArea.classList.add('hidden'); // Hide input while AI is thinking
-
-            const thinkingDiv = document.createElement('div');
-            thinkingDiv.innerHTML = `
-                <div class="font-bold text-sm mb-1 text-slate-600">AI</div>
-                <div class="p-3 rounded-lg bg-slate-200 text-slate-800">
-                    <div class="spinner h-5 w-5 border-2 border-left-color-slate-400"></div>
-                </div>`;
-            conversationLog.appendChild(thinkingDiv);
-            conversationLog.scrollTop = conversationLog.scrollHeight;
-
-            try {
-                const history = diagnosticConversationState.history.map(h => `${h.role}: ${h.text}`).join('\n');
-                const prompt = `This is a diagnostic conversation. The user just said: "${text}". The history is:\n${history}\n\nAsk a follow-up question to gauge their English level. If the conversation has had more than 6 turns, say "Thank you! I have enough information now. I will now analyze your results."`;
-                
-                const result = await fastModel.generateContent(prompt);
-                const aiResponse = result.response.text();
-
-                conversationLog.removeChild(thinkingDiv);
-                addMessageToLog('ai', aiResponse);
-                playSpeech(aiResponse);
-
-                if (aiResponse.includes("analyze your results")) {
-                    endDiagnosticConversationButton.textContent = "Xem kết quả";
-                    endDiagnosticConversationButton.onclick = showPlacementResult;
-                } else {
-                    conversationInputArea.classList.remove('hidden');
-                }
-
-            } catch (error) {
-                console.error("Error in diagnostic conversation:", error);
-                conversationLog.removeChild(thinkingDiv);
-                addMessageToLog('ai', "I'm sorry, I encountered an error. Let's end the conversation here.");
-                endDiagnosticConversationButton.textContent = "Kết thúc";
-                endDiagnosticConversationButton.onclick = () => showView('setup-view');
-            }
-        }
-
-        async function startDiagnosticConversation() {
-            currentQuizType = 'diagnostic';
-            sessionResults = [];
-            score = 0;
-            diagnosticConversationState = {
-                history: [],
-                startTime: new Date()
-            };
-
-            showView('diagnostic-conversation-view');
-            conversationLog.innerHTML = '';
-            conversationInputArea.classList.remove('hidden');
-            endDiagnosticConversationButton.textContent = "Kết thúc";
-            endDiagnosticConversationButton.onclick = () => {
-                if(recognition) recognition.stop();
-                if(synth.speaking) synth.cancel();
-                showView('setup-view');
-            };
-
-            const initialPrompt = "Let's start with a simple question. What did you do last weekend?";
-            addMessageToLog('ai', initialPrompt);
-            playSpeech(initialPrompt);
-        }
-
         // --- Event Listeners & Setup ---
         function handleQuizTypeChange() {
             const selectedType = quizTypeSelect.value;
@@ -2495,13 +1720,7 @@
         
         backToPreviousViewButton.addEventListener('click', () => showView(reviewCameFrom));
         
-        backToSetupFromWriting.addEventListener('click', () => {
-            if (currentQuizType === 'path') {
-                showLearningPath();
-            } else {
-                showView('setup-view');
-            }
-        });
+        backToSetupFromWriting.addEventListener('click', () => showView('setup-view'));
         getFeedbackButton.addEventListener('click', getWritingFeedback);
         writingInput.addEventListener('input', () => {
             const text = writingInput.value;
@@ -2512,56 +1731,6 @@
         closeReinforceModal.addEventListener('click', () => reinforceModal.classList.add('hidden'));
         reinforceModal.addEventListener('click', (e) => { if (e.target === reinforceModal) { reinforceModal.classList.add('hidden'); } });
 
-        // --- Learning Path Event Listeners ---
-        startPlacementTestButton.addEventListener('click', () => showView('assessment-choice-view'));
-        backToSetupFromChoice.addEventListener('click', () => showView('setup-view'));
-        startTraditionalTestButton.addEventListener('click', startPlacementTest);
-        startDiagnosticConversationButton.addEventListener('click', () => {
-            startDiagnosticConversation();
-        });
-        endDiagnosticConversationButton.addEventListener('click', () => {
-            if(recognition) recognition.stop();
-            if(synth.speaking) synth.cancel();
-            showView('setup-view');
-        });
-
-        backToSetupFromPlacement.addEventListener('click', () => showView('setup-view'));
-        createPathButton.addEventListener('click', showGoalSetting);
-        continuePathButton.addEventListener('click', showLearningPath);
-        backToSetupFromPath.addEventListener('click', () => showView('setup-view'));
-        backToPathFromReinforcement.addEventListener('click', showLearningPath);
-        retryPathStepFromReinforcement.addEventListener('click', startPathStep);
-        
-        appContainer.addEventListener('click', (e) => {
-            if (e.target && e.target.closest('.start-step-btn')) {
-                startPathStep();
-            }
-            if (e.target && e.target.closest('.reinforce-btn')) {
-                const resultIndex = parseInt(e.target.closest('.reinforce-btn').dataset.questionIndex, 10);
-                const result = sessionResults[resultIndex];
-                requestReinforcement(result.question, result.userAnswer);
-            }
-        });
-
-        // --- Diagnostic Conversation Event Listeners ---
-        micButton.addEventListener('click', () => {
-            if (!recognition) {
-                initSpeechRecognition();
-                if(!recognition) return;
-            }
-            micButton.classList.add('mic-recording', 'bg-red-400');
-            micButton.disabled = true;
-            recognition.start();
-        });
-
-        sendTextButton.addEventListener('click', () => {
-            handleUserResponse(conversationTextInput.value);
-        });
-        conversationTextInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                handleUserResponse(conversationTextInput.value);
-            }
-        });
 
         // Initial setup
         handleQuizTypeChange();
